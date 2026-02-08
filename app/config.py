@@ -1,5 +1,9 @@
 import logging
+import os
 from typing import List, Dict
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # File upload constraints
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB in bytes
@@ -8,6 +12,10 @@ ALLOWED_MIME_TYPES = [
     "application/pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 ]
+
+# API Keys and Configuration
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./portfolio.db")
 
 # Section keywords for LinkedIn parsing (case-insensitive matching)
 LINKEDIN_SECTIONS: Dict[str, List[str]] = {

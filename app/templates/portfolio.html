@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ portfolio.personal_info.name }} - Portfolio</title>
+    <link rel="stylesheet" href="/static/css/portfolio.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <h1 class="name">{{ portfolio.personal_info.name }}</h1>
+            <p class="focus-badge">{{ portfolio.personal_info.focus|title }} Developer</p>
+            {% if portfolio.metadata.generated_at %}
+            <p class="generated-date">Portfolio generated on {{ portfolio.metadata.generated_at[:10] }}</p>
+            {% endif %}
+        </header>
+
+        <!-- Professional Summary -->
+        {% if portfolio.ai_generated_content.professional_summary %}
+        <section class="section summary-section">
+            <h2 class="section-title">About Me</h2>
+            <p class="summary-text">{{ portfolio.ai_generated_content.professional_summary }}</p>
+        </section>
+        {% endif %}
+
+        <!-- Key Strengths -->
+        {% if portfolio.ai_generated_content.key_strengths %}
+        <section class="section strengths-section">
+            <h2 class="section-title">Key Strengths</h2>
+            <ul class="strengths-list">
+                {% for strength in portfolio.ai_generated_content.key_strengths %}
+                <li class="strength-item">{{ strength }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
+        <!-- Projects -->
+        {% if portfolio.ai_generated_content.project_highlights %}
+        <section class="section projects-section">
+            <h2 class="section-title">Featured Projects</h2>
+            <div class="projects-grid">
+                {% for project in portfolio.ai_generated_content.project_highlights %}
+                <div class="project-card">
+                    <h3 class="project-name">{{ project.name }}</h3>
+                    <p class="project-description">{{ project.description }}</p>
+                    {% if project.technologies %}
+                    <div class="tech-tags">
+                        {% for tech in project.technologies %}
+                        <span class="tech-tag">{{ tech }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if project.highlights %}
+                    <ul class="project-highlights">
+                        {% for highlight in project.highlights %}
+                        <li>{{ highlight }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    {% if project.github_url %}
+                    <a href="{{ project.github_url }}" target="_blank" class="project-link">View on GitHub →</a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- GitHub Projects (from data sources) -->
+        {% if portfolio.data_sources.github_projects %}
+        <section class="section github-section">
+            <h2 class="section-title">GitHub Projects</h2>
+            <div class="github-grid">
+                {% for repo in portfolio.data_sources.github_projects %}
+                <div class="github-card">
+                    <div class="github-header">
+                        <h3 class="github-repo-name">{{ repo.name }}</h3>
+                        {% if repo.quality_score %}
+                        <span class="quality-badge">Quality: {{ repo.quality_score }}/100</span>
+                        {% endif %}
+                    </div>
+                    {% if repo.description %}
+                    <p class="github-description">{{ repo.description }}</p>
+                    {% endif %}
+                    <div class="github-meta">
+                        {% if repo.language %}
+                        <span class="language-tag">{{ repo.language }}</span>
+                        {% endif %}
+                        {% if repo.structure.has_tests %}
+                        <span class="meta-tag">✓ Tests</span>
+                        {% endif %}
+                        {% if repo.structure.files %}
+                        <span class="meta-tag">{{ repo.structure.files }} files</span>
+                        {% endif %}
+                    </div>
+                    {% if repo.highlights %}
+                    <ul class="repo-highlights">
+                        {% for highlight in repo.highlights %}
+                        <li>{{ highlight }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Skills -->
+        {% if portfolio.ai_generated_content.skills_summary %}
+        <section class="section skills-section">
+            <h2 class="section-title">Technical Skills</h2>
+            <div class="skills-grid">
+                {% if portfolio.ai_generated_content.skills_summary.languages %}
+                <div class="skill-category">
+                    <h3 class="skill-category-title">Languages</h3>
+                    <div class="skill-tags">
+                        {% for lang in portfolio.ai_generated_content.skills_summary.languages %}
+                        <span class="skill-tag">{{ lang }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if portfolio.ai_generated_content.skills_summary.frameworks %}
+                <div class="skill-category">
+                    <h3 class="skill-category-title">Frameworks & Libraries</h3>
+                    <div class="skill-tags">
+                        {% for framework in portfolio.ai_generated_content.skills_summary.frameworks %}
+                        <span class="skill-tag">{{ framework }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if portfolio.ai_generated_content.skills_summary.tools %}
+                <div class="skill-category">
+                    <h3 class="skill-category-title">Tools & Platforms</h3>
+                    <div class="skill-tags">
+                        {% for tool in portfolio.ai_generated_content.skills_summary.tools %}
+                        <span class="skill-tag">{{ tool }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Competitive Programming -->
+        {% if portfolio.data_sources.competitive_programming %}
+        <section class="section competitive-section">
+            <h2 class="section-title">Competitive Programming</h2>
+            <div class="competitive-grid">
+                {% if portfolio.data_sources.competitive_programming.codeforces %}
+                <div class="competitive-card">
+                    <h3 class="platform-name">Codeforces</h3>
+                    {% set cf = portfolio.data_sources.competitive_programming.codeforces %}
+                    <p class="username">@{{ cf.username }}</p>
+                    {% if cf.rank %}
+                    <p class="rank">{{ cf.rank|title }}</p>
+                    {% endif %}
+                    <div class="stats">
+                        {% if cf.current_rating %}
+                        <div class="stat">
+                            <span class="stat-label">Rating</span>
+                            <span class="stat-value">{{ cf.current_rating }}</span>
+                        </div>
+                        {% endif %}
+                        {% if cf.max_rating %}
+                        <div class="stat">
+                            <span class="stat-label">Max Rating</span>
+                            <span class="stat-value">{{ cf.max_rating }}</span>
+                        </div>
+                        {% endif %}
+                        {% if cf.problems_solved %}
+                        <div class="stat">
+                            <span class="stat-label">Problems Solved</span>
+                            <span class="stat-value">{{ cf.problems_solved }}</span>
+                        </div>
+                        {% endif %}
+                        {% if cf.contest_count %}
+                        <div class="stat">
+                            <span class="stat-label">Contests</span>
+                            <span class="stat-value">{{ cf.contest_count }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if portfolio.data_sources.competitive_programming.leetcode %}
+                <div class="competitive-card">
+                    <h3 class="platform-name">LeetCode</h3>
+                    {% set lc = portfolio.data_sources.competitive_programming.leetcode %}
+                    <p class="username">@{{ lc.username }}</p>
+                    <div class="stats">
+                        {% if lc.total_solved %}
+                        <div class="stat">
+                            <span class="stat-label">Total Solved</span>
+                            <span class="stat-value">{{ lc.total_solved }}</span>
+                        </div>
+                        {% endif %}
+                        {% if lc.breakdown %}
+                        <div class="stat">
+                            <span class="stat-label">Easy</span>
+                            <span class="stat-value easy">{{ lc.breakdown.easy }}</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Medium</span>
+                            <span class="stat-value medium">{{ lc.breakdown.medium }}</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Hard</span>
+                            <span class="stat-value hard">{{ lc.breakdown.hard }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if lc.profile_url %}
+                    <a href="{{ lc.profile_url }}" target="_blank" class="profile-link">View Profile →</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Code Quality Summary -->
+        {% if portfolio.data_sources.code_quality_summary %}
+        <section class="section quality-section">
+            <h2 class="section-title">Code Quality Insights</h2>
+            {% set quality = portfolio.data_sources.code_quality_summary %}
+            <div class="quality-score">
+                <div class="score-circle">
+                    <span class="score-number">{{ quality.overall_score }}</span>
+                    <span class="score-label">/100</span>
+                </div>
+                <p class="score-description">Overall Portfolio Quality</p>
+            </div>
+            {% if quality.portfolio_strengths %}
+            <div class="quality-strengths">
+                <h3 class="quality-subtitle">Strengths</h3>
+                <ul class="quality-list">
+                    {% for strength in quality.portfolio_strengths %}
+                    <li>{{ strength }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            {% if quality.technology_diversity %}
+            <div class="tech-diversity">
+                <h3 class="quality-subtitle">Technology Diversity</h3>
+                <p>{{ quality.technology_diversity.count }} programming languages</p>
+                <div class="skill-tags">
+                    {% for lang in quality.technology_diversity.languages %}
+                    <span class="skill-tag">{{ lang }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </section>
+        {% endif %}
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Generated by DevHeat Portfolio Generator</p>
+            <p class="footer-note">Powered by AI • <a href="/portfolio/{{ portfolio.personal_info.slug }}" class="api-link">View JSON API</a></p>
+        </footer>
+    </div>
+</body>
+</html>

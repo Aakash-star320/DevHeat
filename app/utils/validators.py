@@ -1,5 +1,6 @@
 import os
 from typing import Tuple
+from fastapi import UploadFile
 from app.config import ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES, MAX_FILE_SIZE
 
 
@@ -65,12 +66,12 @@ def validate_file_size(file_size: int) -> Tuple[bool, str]:
 def check_file_validity(filename: str, content_type: str, file_size: int) -> None:
     """
     Performs all validation checks and raises exception if any fail.
-    
+
     Args:
         filename: Name of the uploaded file
         content_type: MIME type from request
         file_size: Size in bytes
-    
+
     Raises:
         FileValidationError: If validation fails
     """
@@ -78,8 +79,27 @@ def check_file_validity(filename: str, content_type: str, file_size: int) -> Non
     is_valid, error_msg = validate_file_size(file_size)
     if not is_valid:
         raise FileValidationError(error_msg)
-    
+
     # Type check
     is_valid, error_msg = validate_file_type(filename, content_type)
     if not is_valid:
         raise FileValidationError(error_msg)
+
+
+def validate_file(file: UploadFile) -> None:
+    """
+    Validates an uploaded file (convenience wrapper for UploadFile objects).
+
+    Args:
+        file: FastAPI UploadFile object
+
+    Raises:
+        FileValidationError: If validation fails
+    """
+    # Get file size by seeking to end
+    file.file.seek(0, 2)  # Seek to end
+    file_size = file.file.tell()
+    file.file.seek(0)  # Reset to beginning
+
+    # Validate using existing function
+    check_file_validity(file.filename, file.content_type, file_size)
