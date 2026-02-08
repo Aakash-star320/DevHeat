@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import linkedin_router, resume_router, codeforces_router
+from app.routers import linkedin_router, resume_router, codeforces_router, github_router, leetcode_router, portfolio_router
 from app.config import logger
 
 # Initialize FastAPI app
@@ -25,6 +25,9 @@ app.add_middleware(
 app.include_router(linkedin_router.router)
 app.include_router(resume_router.router)
 app.include_router(codeforces_router.router)
+app.include_router(github_router.router)
+app.include_router(leetcode_router.router)
+app.include_router(portfolio_router.router, prefix="/portfolio")
 
 logger.info("FastAPI application initialized")
 
@@ -47,6 +50,9 @@ async def health_check():
         "endpoints": {
             "linkedin": "/upload/linkedin",
             "resume": "/upload/resume",
-            "codeforces": "/codeforces/{username}"
+            "codeforces": "/codeforces/{username}",
+            "github": "/github/analyze",
+            "leetcode": "/leetcode/{username}",
+            "portfolio": "/portfolio"
         }
     }
