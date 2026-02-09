@@ -101,11 +101,12 @@ async def generate_portfolio(
         portfolio.has_codeforces = data_results["codeforces_data"] is not None
         portfolio.has_leetcode = data_results["leetcode_data"] is not None
 
-        portfolio.linkedin_data = data_results["linkedin_data"]
+        # Convert Pydantic models to dictionaries for JSON serialization
+        portfolio.linkedin_data = data_results["linkedin_data"].model_dump() if data_results["linkedin_data"] else None
         portfolio.resume_text = data_results["resume_text"]
-        portfolio.github_data = data_results["github_data"]
-        portfolio.codeforces_data = data_results["codeforces_data"]
-        portfolio.leetcode_data = data_results["leetcode_data"]
+        portfolio.github_data = [repo.model_dump() for repo in data_results["github_data"]] if data_results["github_data"] else None
+        portfolio.codeforces_data = data_results["codeforces_data"].model_dump() if data_results["codeforces_data"] else None
+        portfolio.leetcode_data = data_results["leetcode_data"].model_dump() if data_results["leetcode_data"] else None
 
         await db.commit()
 
@@ -113,20 +114,22 @@ async def generate_portfolio(
         code_quality_metrics = None
         if data_results["github_data"]:
             try:
-                code_quality_metrics = analyze_portfolio_quality(data_results["github_data"])
+                # Convert Pydantic models to dicts for code quality service
+                github_data_dicts = [repo.model_dump() for repo in data_results["github_data"]]
+                code_quality_metrics = analyze_portfolio_quality(github_data_dicts)
                 logger.info(f"Code quality analysis completed. Overall score: {code_quality_metrics.get('overall_score', 0)}")
             except Exception as e:
                 logger.error(f"Code quality analysis failed: {e}")
 
-        # 6. Prepare AI context
+        # 6. Prepare AI context (convert Pydantic models to dicts for AI service)
         ai_context_data = {
             "name": name,
             "portfolio_focus": portfolio_focus,
-            "linkedin_data": data_results["linkedin_data"],
+            "linkedin_data": data_results["linkedin_data"].model_dump() if data_results["linkedin_data"] else None,
             "resume_text": data_results["resume_text"],
-            "github_data": data_results["github_data"],
-            "codeforces_data": data_results["codeforces_data"],
-            "leetcode_data": data_results["leetcode_data"],
+            "github_data": [repo.model_dump() for repo in data_results["github_data"]] if data_results["github_data"] else None,
+            "codeforces_data": data_results["codeforces_data"].model_dump() if data_results["codeforces_data"] else None,
+            "leetcode_data": data_results["leetcode_data"].model_dump() if data_results["leetcode_data"] else None,
             "code_quality_metrics": code_quality_metrics
         }
         ai_context = prepare_ai_context(ai_context_data)
@@ -166,10 +169,19 @@ async def generate_portfolio(
             "portfolio_focus": portfolio_focus
         }
 
+        # Convert data_results Pydantic models to dicts for portfolio builder
+        data_sources_dicts = {
+            "linkedin_data": data_results["linkedin_data"].model_dump() if data_results["linkedin_data"] else None,
+            "resume_text": data_results["resume_text"],
+            "github_data": [repo.model_dump() for repo in data_results["github_data"]] if data_results["github_data"] else None,
+            "codeforces_data": data_results["codeforces_data"].model_dump() if data_results["codeforces_data"] else None,
+            "leetcode_data": data_results["leetcode_data"].model_dump() if data_results["leetcode_data"] else None
+        }
+
         public_portfolio_json = build_public_portfolio_json(
             personal_info=personal_info,
             ai_generated_content=public_content,
-            data_sources=data_results,
+            data_sources=data_sources_dicts,
             code_quality=code_quality_metrics
         )
 
@@ -324,7 +336,6 @@ async def _parse_linkedin_file(file: UploadFile):
     """Parse LinkedIn file"""
     try:
         validate_file(file)
-        # Read file content as bytes
         file_bytes = await file.read()
         text = extract_text(file_bytes, file.filename)
         return parse_linkedin_sections(text)
@@ -337,7 +348,6 @@ async def _parse_resume_file(file: UploadFile):
     """Parse resume file"""
     try:
         validate_file(file)
-        # Read file content as bytes
         file_bytes = await file.read()
         text = extract_text(file_bytes, file.filename)
         return text
