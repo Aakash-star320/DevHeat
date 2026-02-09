@@ -281,13 +281,38 @@ async def _fetch_all_data_sources(
     # Process results
     data = {}
     for name, result in zip(task_names, results):
+        key = f"{name}_data" if name != "resume" else "resume_text"
+        
         if isinstance(result, Exception):
             logger.warning(f"Failed to fetch {name}: {result}")
-            data[f"{name}_data" if name != "resume" else "resume_text"] = None
+            data[key] = None
         else:
-            data[f"{name}_data" if name != "resume" else "resume_text"] = result
+            # Convert result to serializable dict if it's a Pydantic model
+            data[key] = _to_serializable(result)
 
     return data
+
+
+def _to_serializable(obj):
+    """Helper to convert Pydantic models to dictionaries recursively"""
+    if obj is None:
+        return None
+        
+    # Handle Pydantic models
+    if hasattr(obj, "model_dump"):
+        return obj.model_dump()
+    if hasattr(obj, "dict"):
+        return obj.dict()
+        
+    # Handle lists (like GitHub repos)
+    if isinstance(obj, list):
+        return [_to_serializable(item) for item in obj]
+        
+    # Handle dictionaries (might contain Pydantic models)
+    if isinstance(obj, dict):
+        return {k: _to_serializable(v) for k, v in obj.items()}
+        
+    return obj
 
 
 async def _return_none():
@@ -299,7 +324,9 @@ async def _parse_linkedin_file(file: UploadFile):
     """Parse LinkedIn file"""
     try:
         validate_file(file)
-        text = extract_text(file.file, file.filename)
+        # Read file content as bytes
+        file_bytes = await file.read()
+        text = extract_text(file_bytes, file.filename)
         return parse_linkedin_sections(text)
     except Exception as e:
         logger.error(f"LinkedIn parsing failed: {e}")
@@ -310,7 +337,9 @@ async def _parse_resume_file(file: UploadFile):
     """Parse resume file"""
     try:
         validate_file(file)
-        text = extract_text(file.file, file.filename)
+        # Read file content as bytes
+        file_bytes = await file.read()
+        text = extract_text(file_bytes, file.filename)
         return text
     except Exception as e:
         logger.error(f"Resume parsing failed: {e}")
@@ -320,6 +349,9 @@ async def _parse_resume_file(file: UploadFile):
 async def _analyze_github_repos(repos_json: str):
     """Analyze GitHub repositories"""
     try:
+        if not repos_json or not repos_json.strip():
+            return None
+            
         repo_urls = json.loads(repos_json)
         if not isinstance(repo_urls, list):
             raise ValueError("github_repos must be a JSON array")

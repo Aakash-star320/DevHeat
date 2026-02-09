@@ -2,6 +2,8 @@
 import logging
 import json
 from typing import Dict, Any, Optional, List
+from pathlib import Path
+from datetime import datetime
 import google.generativeai as genai
 from app.config import GEMINI_API_KEY
 
@@ -13,8 +15,8 @@ if GEMINI_API_KEY:
 else:
     logger.warning("GEMINI_API_KEY not set. AI features will be disabled.")
 
-# Use Gemini 1.5 Flash for free tier (15 RPM, 1M TPM, 1500 RPD)
-MODEL_NAME = "gemini-1.5-flash"
+# Use Gemini Flash Latest for best compatibility and free tier
+MODEL_NAME = "gemini-flash-latest"
 
 
 def prepare_ai_context(portfolio_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -45,9 +47,9 @@ def prepare_ai_context(portfolio_data: Dict[str, Any]) -> Dict[str, Any]:
             "skills": linkedin.get("skills_raw", "")[:500]
         }
 
-    # Resume text (truncated)
+    # Resume text
     if portfolio_data.get("resume_text"):
-        context["resume_highlights"] = portfolio_data["resume_text"][:2000]
+        context["resume_highlights"] = portfolio_data["resume_text"]
 
     # GitHub data (metadata + README only, NO source code)
     if portfolio_data.get("github_data"):
@@ -121,27 +123,36 @@ async def generate_portfolio_content(
         # Build prompt
         prompt = _build_portfolio_prompt(context, portfolio_focus)
 
+        # Log prompt for debugging
+        _log_prompt_to_file("portfolio_generation", prompt)
+
         # Generate content
         response = model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
                 temperature=0.7,
                 top_p=0.9,
-                max_output_tokens=2048
+                max_output_tokens=4096
             )
         )
 
+        # Log raw response for debugging
+        _log_response_to_file("portfolio_generation", response.text)
+
         # Parse JSON response
-        content = json.loads(response.text)
+        try:
+            cleaned_json = _strip_markdown_json(response.text)
+            content = json.loads(cleaned_json)
+        except json.JSONDecodeError:
+            logger.error("Failed to parse AI response as JSON even after cleaning.")
+            raise
 
         logger.info(f"Successfully generated portfolio content for focus: {portfolio_focus}")
         return content
 
-    except json.JSONDecodeError:
-        logger.error("Failed to parse AI response as JSON. Using template fallback.")
-        return _generate_template_content(context, portfolio_focus)
     except Exception as e:
         logger.error(f"Error generating portfolio content: {e}. Using template fallback.")
+        _log_error_to_file("portfolio_generation", str(e))
         return _generate_template_content(context, portfolio_focus)
 
 
@@ -173,27 +184,36 @@ async def generate_coaching_insights(
         # Build prompt
         prompt = _build_coaching_prompt(context, portfolio_focus)
 
+        # Log prompt for debugging
+        _log_prompt_to_file("coaching_insights", prompt)
+
         # Generate content
         response = model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
                 temperature=0.8,
                 top_p=0.9,
-                max_output_tokens=3072
+                max_output_tokens=4096
             )
         )
 
+        # Log raw response for debugging
+        _log_response_to_file("coaching_insights", response.text)
+
         # Parse JSON response
-        content = json.loads(response.text)
+        try:
+            cleaned_json = _strip_markdown_json(response.text)
+            content = json.loads(cleaned_json)
+        except json.JSONDecodeError:
+            logger.error("Failed to parse AI response as JSON even after cleaning.")
+            raise
 
         logger.info(f"Successfully generated coaching insights for focus: {portfolio_focus}")
         return content
 
-    except json.JSONDecodeError:
-        logger.error("Failed to parse AI response as JSON. Using template fallback.")
-        return _generate_template_coaching(context, portfolio_focus)
     except Exception as e:
         logger.error(f"Error generating coaching insights: {e}. Using template fallback.")
+        _log_error_to_file("coaching_insights", str(e))
         return _generate_template_coaching(context, portfolio_focus)
 
 
@@ -252,6 +272,57 @@ OUTPUT: Only the refined content, no explanations or metadata. Output as plain t
         return current_content
 
 
+def _log_prompt_to_file(task_type: str, prompt: str):
+    """Log the AI prompt to a debug file for transparency"""
+    try:
+        log_dir = Path("logs")
+        log_dir.mkdir(exist_ok=True)
+        
+        log_path = log_dir / f"last_{task_type}_prompt.txt"
+        with open(log_path, "w", encoding="utf-8") as f:
+            f.write(f"--- PROMPT FOR {task_type.upper()} ---\n")
+            f.write(f"TIMESTAMP: {datetime.now().isoformat()}\n")
+            f.write("-" * 30 + "\n")
+            f.write(prompt)
+            f.write("\n" + "-" * 30 + "\n")
+        
+        logger.info(f"AI prompt logged to {log_path}")
+    except Exception as e:
+        logger.warning(f"Failed to log AI prompt to file: {e}")
+
+
+def _log_response_to_file(task_type: str, response_text: str):
+    """Log the AI response for debugging"""
+    try:
+        log_path = Path("logs") / f"last_{task_type}_response.txt"
+        with open(log_path, "w", encoding="utf-8") as f:
+            f.write(response_text)
+    except Exception:
+        pass
+
+
+def _log_error_to_file(task_type: str, error_msg: str):
+    """Log processing errors"""
+    try:
+        log_path = Path("logs") / f"last_{task_type}_error.txt"
+        with open(log_path, "w", encoding="utf-8") as f:
+            f.write(error_msg)
+    except Exception:
+        pass
+
+
+def _strip_markdown_json(text: str) -> str:
+    """Strip markdown code blocks from JSON string if present"""
+    text = text.strip()
+    if text.startswith("```"):
+        # Find first { and last }
+        start = text.find("{")
+        end = text.rfind("}")
+        if start != -1 and end != -1:
+            return text[start:end+1]
+    return text
+
+
 def _build_portfolio_prompt(context: Dict[str, Any], focus: str) -> str:
     """Build prompt for public portfolio content generation"""
     return f"""You are a professional portfolio writer. Generate compelling portfolio content in JSON format.
@@ -267,6 +338,14 @@ OUTPUT FORMAT (JSON):
 {{
   "professional_summary": "3-4 sentence summary highlighting experience, skills, and focus area",
   "key_strengths": ["strength 1", "strength 2", "strength 3", "strength 4"],
+  "work_experience": [
+    {{
+      "title": "job title",
+      "company": "company name",
+      "duration": "start - end date",
+      "description_bullets": ["achievement 1", "achievement 2"]
+    }}
+  ],
   "project_highlights": [
     {{
       "name": "project name",
@@ -275,10 +354,16 @@ OUTPUT FORMAT (JSON):
       "highlights": ["highlight 1", "highlight 2"]
     }}
   ],
+  "achievements": ["achievement 1", "award 2", "contest rank 3"],
   "skills_summary": {{
     "languages": ["list of programming languages"],
     "frameworks": ["list of frameworks/libraries"],
     "tools": ["list of tools/platforms"]
+  }},
+  "contact_info": {{
+    "email": "email address",
+    "linkedin": "url",
+    "github": "url"
   }}
 }}
 

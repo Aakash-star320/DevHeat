@@ -241,3 +241,65 @@ async def view_portfolio_html(
             "portfolio": portfolio.public_portfolio_json
         }
     )
+
+
+@router.get("/debug/last-ai-generation", response_class=HTMLResponse)
+async def get_last_debug_info(request: Request):
+    """
+    Debug endpoint to see the last AI prompt and response.
+    
+    This is useful for troubleshooting why certain data might be missing
+    or why AI generation failed.
+    """
+    try:
+        log_dir = Path("logs")
+        prompt_path = log_dir / "last_portfolio_generation_prompt.txt"
+        response_path = log_dir / "last_portfolio_generation_response.txt"
+        error_path = log_dir / "last_portfolio_generation_error.txt"
+        
+        prompt = "No prompt logged yet."
+        if prompt_path.exists():
+            with open(prompt_path, "r", encoding="utf-8") as f:
+                prompt = f.read()
+                
+        response = "No response logged yet."
+        if response_path.exists():
+            with open(response_path, "r", encoding="utf-8") as f:
+                response = f.read()
+                
+        error = "No error logged."
+        if error_path.exists():
+            with open(error_path, "r", encoding="utf-8") as f:
+                error = f.read()
+                
+        # Simple HTML response for easier reading
+        html_content = f"""
+        <html>
+            <head>
+                <title>AI Debug Info</title>
+                <style>
+                    body {{ font-family: sans-serif; padding: 20px; background: #f5f5f5; }}
+                    pre {{ background: #fff; padding: 15px; border-radius: 5px; border: 1px solid #ddd; overflow-x: auto; white-space: pre-wrap; }}
+                    h2 {{ color: #333; }}
+                    .error {{ color: #d32f2f; }}
+                </style>
+            </head>
+            <body>
+                <h1>Last AI Generation Debug Info</h1>
+                
+                <h2>1. Error (if any)</h2>
+                <pre class="error">{error}</pre>
+                
+                <h2>2. Prompt Sent to Gemini</h2>
+                <pre>{prompt}</pre>
+                
+                <h2>3. Raw Response from Gemini</h2>
+                <pre>{response}</pre>
+                
+                <p><a href="/">Back to Home</a></p>
+            </body>
+        </html>
+        """
+        return HTMLResponse(content=html_content)
+    except Exception as e:
+        return HTMLResponse(content=f"<h1>Debug Error</h1><p>{str(e)}</p>")
