@@ -56,6 +56,30 @@ app.add_middleware(
 # Mount static files (CSS, JS, images)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
+# Mount frontend build (for production)
+# The frontend build will be in frontend/dist after running npm run build
+import os
+if os.path.exists("frontend/dist"):
+    app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="frontend-assets")
+    from fastapi.responses import FileResponse
+    
+    @app.get("/refine/{slug}")
+    async def serve_refine_page(slug: str):
+        """Serve the refinement UI"""
+        return FileResponse("frontend/dist/index.html")
+    
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        """Serve frontend for all other routes (must be last)"""
+        # Don't serve frontend for API routes
+        if full_path.startswith(("api/", "docs", "redoc", "openapi.json", "health", "upload/", "github/", "codeforces/", "leetcode/", "portfolio/")):
+            return {"error": "Not found"}
+        
+        file_path = f"frontend/dist/{full_path}"
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse("frontend/dist/index.html")
+
 # Register routers
 # Data extraction endpoints
 app.include_router(linkedin_router.router)
