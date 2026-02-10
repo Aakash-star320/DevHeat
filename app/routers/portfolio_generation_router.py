@@ -178,9 +178,23 @@ async def generate_portfolio(
             personal_info=personal_info
         )
 
-        # 10. Store generated content in database
-        portfolio.public_portfolio_json = public_portfolio_json
-        portfolio.private_coaching_json = private_coaching_json
+        # 10. Create PortfolioVersion (version 1, committed)
+        from app.models.database import PortfolioVersion, VersionState, VersionCreatedBy
+        
+        portfolio_version = PortfolioVersion(
+            portfolio_id=portfolio.id,
+            version_number=1,
+            version_state=VersionState.COMMITTED,
+            public_portfolio_json=public_portfolio_json,
+            private_coaching_json=private_coaching_json,
+            changes_summary="Initial portfolio generation",
+            created_by=VersionCreatedBy.AI
+        )
+        db.add(portfolio_version)
+        await db.flush()  # Get the version ID
+        
+        # 11. Update portfolio with current version and metadata
+        portfolio.current_version_id = portfolio_version.id
         portfolio.ai_generation_metadata = {
             "model": "gemini-1.5-flash",
             "generated_at": datetime.utcnow().isoformat(),

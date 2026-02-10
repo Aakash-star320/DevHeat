@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import PortfolioForm from './components/PortfolioForm'
+import PortfolioRefinement from './components/PortfolioRefinement'
 import './App.css'
 
-function App() {
+function HomePage() {
   const [generatedPortfolio, setGeneratedPortfolio] = useState(null)
 
   const handlePortfolioGenerated = (data) => {
@@ -97,12 +99,20 @@ function App() {
                   <p><strong>Generation Time:</strong> {generatedPortfolio.generation_time_seconds}s</p>
                 </div>
 
-                <button
-                  onClick={() => setGeneratedPortfolio(null)}
-                  className="btn btn-outline"
-                >
-                  Create Another Portfolio
-                </button>
+                <div className="action-buttons">
+                  <button
+                    onClick={() => window.location.href = `/refine/${generatedPortfolio.slug}`}
+                    className="btn btn-primary btn-large"
+                  >
+                    Refine Portfolio with AI
+                  </button>
+                  <button
+                    onClick={() => setGeneratedPortfolio(null)}
+                    className="btn btn-outline"
+                  >
+                    Create Another Portfolio
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -113,6 +123,42 @@ function App() {
         <p>Powered by FastAPI + React • AI-Generated Portfolios</p>
       </footer>
     </div>
+  )
+}
+
+function RefinementPage() {
+  // Extract slug from URL
+  const slug = window.location.pathname.split('/').pop()
+
+  return (
+    <div className="app">
+      <header className="header">
+        <div className="container">
+          <h1 className="logo">DevHeat</h1>
+          <p className="tagline">AI-Powered Portfolio Generator</p>
+        </div>
+      </header>
+
+      <main className="main">
+        <PortfolioRefinement slug={slug} />
+      </main>
+
+      <footer className="footer">
+        <p>Powered by FastAPI + React • AI-Generated Portfolios</p>
+      </footer>
+    </div>
+  )
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/refine/:slug" element={<RefinementPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

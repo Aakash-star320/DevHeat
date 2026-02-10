@@ -8,6 +8,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.database import get_db
 from app.models.database import Portfolio
@@ -39,9 +40,11 @@ async def get_public_portfolio(
     Returns:
         Public portfolio JSON with AI-generated content and data sources
     """
-    # Query portfolio by slug
+    # Query portfolio by slug with current_version eager loaded
     result = await db.execute(
-        select(Portfolio).where(Portfolio.slug == slug)
+        select(Portfolio)
+        .options(selectinload(Portfolio.current_version))
+        .where(Portfolio.slug == slug)
     )
     portfolio = result.scalar_one_or_none()
 
@@ -71,15 +74,15 @@ async def get_public_portfolio(
             detail="Portfolio is in draft status and not yet generated"
         )
 
-    # Return public portfolio JSON
-    if not portfolio.public_portfolio_json:
+    # Return current version's public portfolio JSON
+    if not portfolio.current_version or not portfolio.current_version.public_portfolio_json:
         raise HTTPException(
             status_code=500,
             detail="Portfolio data is missing. Please regenerate."
         )
 
     logger.info(f"Retrieved public portfolio for slug: {slug}")
-    return portfolio.public_portfolio_json
+    return portfolio.current_version.public_portfolio_json
 
 
 @router.get("/{slug}/coaching", response_model=Dict[str, Any])
@@ -102,9 +105,11 @@ async def get_private_coaching(
     Returns:
         Private coaching JSON with skill analysis and recommendations
     """
-    # Query portfolio by slug
+    # Query portfolio by slug with current_version
     result = await db.execute(
-        select(Portfolio).where(Portfolio.slug == slug)
+        select(Portfolio)
+        .options(selectinload(Portfolio.current_version))
+        .where(Portfolio.slug == slug)
     )
     portfolio = result.scalar_one_or_none()
 
@@ -118,18 +123,18 @@ async def get_private_coaching(
     if portfolio.status != "completed":
         raise HTTPException(
             status_code=400,
-            detail=f"Portfolio is not completed yet (status: {portfolio.status})"
+            detail=f"Portfolio is not ready. Current status: {portfolio.status}"
         )
 
-    # Return private coaching JSON
-    if not portfolio.private_coaching_json:
+    # Return current version's private coaching JSON
+    if not portfolio.current_version or not portfolio.current_version.private_coaching_json:
         raise HTTPException(
             status_code=500,
-            detail="Coaching data is missing. Please regenerate portfolio."
+            detail="Coaching insights are missing. Please regenerate."
         )
 
     logger.info(f"Retrieved private coaching for slug: {slug}")
-    return portfolio.private_coaching_json
+    return portfolio.current_version.private_coaching_json
 
 
 @router.get("/{slug}/status", response_model=PortfolioStatusResponse)
@@ -195,9 +200,11 @@ async def view_portfolio_html(
     Returns:
         Rendered HTML page
     """
-    # Query portfolio by slug
+    # Query portfolio by slug with current_version
     result = await db.execute(
-        select(Portfolio).where(Portfolio.slug == slug)
+        select(Portfolio)
+        .options(selectinload(Portfolio.current_version))
+        .where(Portfolio.slug == slug)
     )
     portfolio = result.scalar_one_or_none()
 
@@ -225,22 +232,145 @@ async def view_portfolio_html(
             detail=f"Portfolio generation failed: {portfolio.error_message}"
         )
 
-    if portfolio.status != "completed" or not portfolio.public_portfolio_json:
+    if portfolio.status != "completed" or not portfolio.current_version or not portfolio.current_version.public_portfolio_json:
         raise HTTPException(
             status_code=400,
             detail="Portfolio is not ready for viewing yet"
         )
 
-    # Render portfolio HTML
+    # Render portfolio HTML from current version
     logger.info(f"Rendering HTML portfolio for slug: {slug}")
 
     return templates.TemplateResponse(
         "portfolio.html",
         {
             "request": request,
-            "portfolio": portfolio.public_portfolio_json
+            "portfolio": portfolio.current_version.public_portfolio_json
         }
     )
+
+
+@router.get("/{slug}/versions")
+async def list_portfolio_versions(
+    slug: str,
+    limit: int = 50,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    List all versions for a portfolio.
+    
+    Returns version metadata including version_state for UI rendering.
+    
+    Args:
+        slug: Portfolio slug
+        limit: Maximum number of versions to return (default 50)
+        db: Database session
+    
+    Returns:
+        List of versions with metadata
+    """
+    # Query portfolio by slug
+    result = await db.execute(
+        select(Portfolio).where(Portfolio.slug == slug)
+    )
+    portfolio = result.scalar_one_or_none()
+    
+    if not portfolio:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Portfolio not found with slug: {slug}"
+        )
+    
+    # Query all versions for this portfolio
+    from app.models.database import PortfolioVersion
+    versions_result = await db.execute(
+        select(PortfolioVersion)
+        .where(PortfolioVersion.portfolio_id == portfolio.id)
+        .order_by(PortfolioVersion.version_number.desc())
+        .limit(limit)
+    )
+    versions = versions_result.scalars().all()
+    
+    # Format versions with all required fields
+    version_list = [
+        {
+            "id": v.id,
+            "version_number": v.version_number,
+            "version_state": v.version_state.value,  # Include version_state for UI
+            "changes_summary": v.changes_summary,
+            "created_at": v.created_at.isoformat() + "Z",
+            "created_by": v.created_by.value
+        }
+        for v in versions
+    ]
+    
+    logger.info(f"Retrieved {len(version_list)} versions for portfolio {slug}")
+    
+    return {
+        "versions": version_list,
+        "total_count": len(version_list)
+    }
+
+
+@router.get("/{slug}/versions/{version_id}", response_model=Dict[str, Any])
+async def get_portfolio_version(
+    slug: str,
+    version_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get a specific portfolio version by ID.
+    
+    This endpoint returns the full content of a specific version,
+    including the portfolio JSON data.
+    
+    Args:
+        slug: Portfolio slug
+        version_id: UUID of the version to retrieve
+        db: Database session
+    
+    Returns:
+        Version metadata and portfolio JSON content
+    """
+    # Query portfolio by slug
+    result = await db.execute(
+        select(Portfolio).where(Portfolio.slug == slug)
+    )
+    portfolio = result.scalar_one_or_none()
+    
+    if not portfolio:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Portfolio not found with slug: {slug}"
+        )
+    
+    # Query the specific version
+    from app.models.database import PortfolioVersion
+    version_result = await db.execute(
+        select(PortfolioVersion)
+        .where(PortfolioVersion.id == version_id)
+        .where(PortfolioVersion.portfolio_id == portfolio.id)
+    )
+    version = version_result.scalar_one_or_none()
+    
+    if not version:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Version not found or does not belong to portfolio: {version_id}"
+        )
+    
+    logger.info(f"Retrieved version {version.version_number} for portfolio {slug}")
+    
+    return {
+        "id": version.id,
+        "version_number": version.version_number,
+        "version_state": version.version_state.value,
+        "portfolio_json": version.public_portfolio_json,
+        "changes_summary": version.changes_summary,
+        "created_at": version.created_at.isoformat() + "Z",
+        "created_by": version.created_by.value
+    }
+
 
 
 @router.get("/debug/last-ai-generation", response_class=HTMLResponse)
