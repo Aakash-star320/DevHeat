@@ -33,3 +33,13 @@ temp/
 # Environment variables
 .env
 .env.local
+
+# Database
+portfolio.db
+
+# Logs
+logs/
+*.log
+last_*_prompt.txt
+last_*_response.txt
+last_*_error.txt

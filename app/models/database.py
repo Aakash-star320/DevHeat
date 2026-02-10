@@ -1,11 +1,26 @@
 """SQLAlchemy ORM models for database tables"""
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Boolean, Text, DateTime, Integer, ForeignKey, Index
+from enum import Enum as PyEnum
+from sqlalchemy import Column, String, Boolean, Text, DateTime, Integer, ForeignKey, Index, Enum
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.dialects.sqlite import JSON as SQLiteJSON
 from sqlalchemy.orm import relationship
 from app.database import Base
+
+
+# Enums for versioning system
+class VersionState(str, PyEnum):
+    """State of a portfolio version"""
+    DRAFT = "draft"
+    COMMITTED = "committed"
+
+
+class VersionCreatedBy(str, PyEnum):
+    """Source that created a version"""
+    AI = "ai"
+    USER_MANUAL = "user_manual"
+    AI_REFINEMENT = "ai_refinement"
 
 
 # Use UUID type that works with both PostgreSQL and SQLite
@@ -58,6 +73,9 @@ class Portfolio(Base):
     # Error tracking
     error_message = Column(Text, nullable=True)
 
+    # Current version reference
+    current_version_id = Column(String(36), ForeignKey("portfolio_versions.id"), nullable=True)
+
     # Timestamps
     generation_started_at = Column(DateTime, nullable=True)
     generation_completed_at = Column(DateTime, nullable=True)
@@ -65,7 +83,8 @@ class Portfolio(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
-    versions = relationship("PortfolioVersion", back_populates="portfolio", cascade="all, delete-orphan")
+    versions = relationship("PortfolioVersion", back_populates="portfolio", foreign_keys="PortfolioVersion.portfolio_id", cascade="all, delete-orphan")
+    current_version = relationship("PortfolioVersion", foreign_keys=[current_version_id], uselist=False, post_update=True)
 
     # Indexes for performance
     __table_args__ = (
@@ -90,6 +109,7 @@ class PortfolioVersion(Base):
 
     # Version tracking
     version_number = Column(Integer, nullable=False)
+    version_state = Column(Enum(VersionState), default=VersionState.DRAFT, nullable=False)
 
     # Snapshot of portfolio content at this version
     public_portfolio_json = Column(SQLiteJSON, nullable=False)
@@ -97,21 +117,20 @@ class PortfolioVersion(Base):
 
     # Version metadata
     changes_summary = Column(Text, nullable=True)
-    created_by = Column(
-        String(20),
-        nullable=False
-    )  # Options: ai, user_manual, ai_refinement
+    created_by = Column(Enum(VersionCreatedBy), default=VersionCreatedBy.AI, nullable=False)
 
     # Timestamp
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
-    portfolio = relationship("Portfolio", back_populates="versions")
+    portfolio = relationship("Portfolio", back_populates="versions", foreign_keys=[portfolio_id])
 
     # Indexes for performance
     __table_args__ = (
         Index('idx_version_portfolio_id', 'portfolio_id'),
+        Index('idx_version_state', 'version_state'),
         Index('idx_version_created_at', 'created_at'),
+        Index('idx_version_portfolio_number', 'portfolio_id', 'version_number'),
     )
 
     def __repr__(self):

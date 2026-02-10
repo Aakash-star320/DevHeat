@@ -11,7 +11,8 @@ from app.routers import (
     portfolio_router,
     portfolio_generation_router,
     portfolio_retrieval_router,
-    portfolio_editing_router
+    portfolio_editing_router,
+    portfolio_refinement_router
 )
 from app.config import logger
 from app.database import init_db, close_db
@@ -67,7 +68,8 @@ app.include_router(leetcode_router.router)
 app.include_router(portfolio_router.router, prefix="/portfolio")  # Slug generation
 app.include_router(portfolio_generation_router.router)  # Portfolio generation orchestrator
 app.include_router(portfolio_retrieval_router.router)  # GET endpoints (retrieve portfolios)
-app.include_router(portfolio_editing_router.router)  # PATCH/POST endpoints (edit/refine)
+# app.include_router(portfolio_editing_router.router)  # PATCH/POST endpoints (edit/refine) - DEPRECATED: Use portfolio_refinement_router instead
+app.include_router(portfolio_refinement_router.router)  # AI-assisted refinement
 
 logger.info("FastAPI application initialized with all routers")
 
@@ -104,6 +106,8 @@ async def health_check():
                 "status": "/portfolio/{slug}/status",
                 "edit": "/portfolio/{slug}",
                 "refine": "/portfolio/{slug}/refine",
+                "confirm": "/portfolio/{slug}/confirm",
+                "revert": "/portfolio/{slug}/revert",
                 "versions": "/portfolio/{slug}/versions",
                 "restore": "/portfolio/{slug}/versions/{version_id}/restore",
                 "slug_generator": "/portfolio/"

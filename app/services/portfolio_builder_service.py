@@ -35,8 +35,11 @@ def build_public_portfolio_json(
         "ai_generated_content": {
             "professional_summary": ai_generated_content.get("professional_summary", ""),
             "key_strengths": ai_generated_content.get("key_strengths", []),
+            "work_experience": ai_generated_content.get("work_experience", []),
             "project_highlights": ai_generated_content.get("project_highlights", []),
-            "skills_summary": ai_generated_content.get("skills_summary", {})
+            "achievements": ai_generated_content.get("achievements", []),
+            "skills_summary": ai_generated_content.get("skills_summary", {}),
+            "contact_info": ai_generated_content.get("contact_info", {})
         },
         "data_sources": _build_data_sources_section(data_sources, code_quality),
         "metadata": {

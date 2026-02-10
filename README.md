@@ -8,8 +8,9 @@ FastAPI backend for autonomous resume and portfolio generation with AI-powered c
 - **Database Persistence** (SQLite/PostgreSQL support)
 - **Code Quality Analysis** (heuristic-based, language-agnostic)
 - **Private Coaching Insights** (skill gaps, learning paths, interview prep)
-- **Portfolio Editing & Refinement** (manual editing + AI-assisted)
-- **Version History** tracking for all portfolio changes
+- **Portfolio Refinement UI** with version management (React frontend)
+- **AI-Assisted Refinement** with confirm/revert workflows
+- **Version History** tracking with draft/committed states
 
 ---
 
@@ -35,10 +36,20 @@ FastAPI backend for autonomous resume and portfolio generation with AI-powered c
 - **Retrieve Portfolio** (`GET /portfolio/{slug}`) - Get public portfolio JSON
 - **Get Coaching** (`GET /portfolio/{slug}/coaching`) - Get private coaching insights
 - **Check Status** (`GET /portfolio/{slug}/status`) - Poll generation status
-- **Edit Portfolio** (`PATCH /portfolio/{slug}`) - Manual editing with versioning
-- **Refine Section** (`POST /portfolio/{slug}/refine`) - AI-assisted content refinement
-- **Version History** (`GET /portfolio/{slug}/versions`) - List all versions
-- **Restore Version** (`POST /portfolio/{slug}/versions/{id}/restore`) - Rollback to previous version
+- **Refine Portfolio** (`POST /portfolio/{slug}/refine`) - AI-assisted full portfolio refinement
+- **Confirm Portfolio** (`POST /portfolio/{slug}/confirm`) - Commit draft version
+- **Revert Portfolio** (`POST /portfolio/{slug}/revert`) - Revert to previous version
+- **List Versions** (`GET /portfolio/{slug}/versions`) - Get all version history
+- **Get Version** (`GET /portfolio/{slug}/versions/{version_id}`) - Get specific version content
+
+### Frontend UI (NEW)
+- **Portfolio Generator** (`http://localhost:3000`) - Upload resume/LinkedIn/GitHub data
+- **Refinement UI** (`http://localhost:3000/refine/{slug}`) - Version management interface with:
+  - Two-pane layout (desktop) / dropdown (mobile)
+  - Version selector with status badges (Current/Draft/Committed)
+  - Read-only portfolio preview
+  - AI refinement controls with conditional confirm button
+  - Revert action bar for viewing older versions
 
 ### Database & Persistence (NEW)
 - **SQLite** (MVP) or **PostgreSQL** (production)
@@ -157,7 +168,7 @@ DATABASE_URL=sqlite+aiosqlite:///./portfolio.db
 alembic upgrade head
 ```
 
-### 7. Run the Server
+### 7. Run the Backend Server
 
 ```bash
 uvicorn app.main:app --reload
@@ -165,10 +176,22 @@ uvicorn app.main:app --reload
 
 The API will be available at: `http://localhost:8000`
 
-### 8. Access Documentation
+### 8. Run the Frontend (React)
 
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend will be available at: `http://localhost:3000`
+
+### 9. Access Documentation
+
+- **Frontend**: http://localhost:3000
+- **Refinement UI**: http://localhost:3000/refine/{slug}
+- **API Swagger UI**: http://localhost:8000/docs
+- **API ReDoc**: http://localhost:8000/redoc
 
 ---
 
@@ -327,7 +350,7 @@ PATCH /portfolio/{slug}
 
 ---
 
-### 6. Refine Portfolio Section (AI-Assisted)
+### 6. Refine Portfolio (AI-Assisted)
 
 ```bash
 POST /portfolio/{slug}/refine
@@ -336,32 +359,87 @@ POST /portfolio/{slug}/refine
 **Request:**
 ```json
 {
-  "section": "professional_summary",
-  "instruction": "make it more concise and emphasize backend skills"
+  "instruction": "Make the professional summary more concise and emphasize backend skills",
+  "sections": ["all"]
 }
 ```
 
 **Response:**
 ```json
 {
-  "section": "professional_summary",
-  "refined_content": "Experienced backend engineer with 5 years...",
-  "version_created": true
+  "message": "Portfolio refined successfully",
+  "version_id": "550e8400-e29b-41d4-a716-446655440001",
+  "version_number": 2,
+  "version_state": "draft",
+  "changes_summary": "AI refinement: Make the professional summary more concise...",
+  "portfolio_json": { ... }
 }
 ```
 
-**Available Sections:**
-- `professional_summary`
-- `key_strengths`
-- `project_highlights`
-- `skills_summary`
+**Notes:**
+- Creates a new **draft** version
+- Refinement applies to the entire portfolio based on instruction
+- Must confirm the draft to make it the committed version
+
+---
+
+### 6a. Confirm Portfolio (Commit Draft)
+
+```bash
+POST /portfolio/{slug}/confirm
+```
+
+**Response:**
+```json
+{
+  "message": "Portfolio confirmed successfully",
+  "version_id": "550e8400-e29b-41d4-a716-446655440001",
+  "version_number": 2,
+  "version_state": "committed"
+}
+```
+
+**Notes:**
+- Commits the current draft version
+- Deletes all other versions (only one committed version remains)
+- Cannot be undone
+
+---
+
+### 6b. Revert Portfolio
+
+```bash
+POST /portfolio/{slug}/revert
+```
+
+**Request:**
+```json
+{
+  "version_id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+**Response:**
+```json
+{
+  "message": "Portfolio reverted successfully",
+  "version_id": "550e8400-e29b-41d4-a716-446655440000",
+  "version_number": 1,
+  "version_state": "committed"
+}
+```
+
+**Notes:**
+- Reverts to the specified version
+- Deletes all other versions
+- Cannot be undone
 
 ---
 
 ### 7. View Version History
 
 ```bash
-GET /portfolio/{slug}/versions?limit=10
+GET /portfolio/{slug}/versions?limit=50
 ```
 
 **Response:**
@@ -369,39 +447,52 @@ GET /portfolio/{slug}/versions?limit=10
 {
   "versions": [
     {
-      "id": "version-id-1",
+      "id": "version-id-2",
       "version_number": 2,
+      "version_state": "draft",
+      "changes_summary": "AI refinement: Make it more concise",
       "created_at": "2024-02-09T14:30:00Z",
-      "created_by": "user_manual",
-      "changes_summary": "Updated professional summary"
+      "created_by": "ai_refinement"
     },
     {
-      "id": "version-id-2",
+      "id": "version-id-1",
       "version_number": 1,
+      "version_state": "committed",
+      "changes_summary": "Initial AI-generated portfolio",
       "created_at": "2024-02-09T12:00:00Z",
-      "created_by": "ai",
-      "changes_summary": "Initial AI-generated portfolio"
+      "created_by": "ai"
     }
   ],
   "total_count": 2
 }
 ```
 
+**Version States:**
+- `draft` - Unconfirmed refinement
+- `committed` - Confirmed version
+
 ---
 
-### 8. Restore Previous Version
+### 8. Get Specific Version Content
 
 ```bash
-POST /portfolio/{slug}/versions/{version_id}/restore
+GET /portfolio/{slug}/versions/{version_id}
 ```
 
 **Response:**
 ```json
 {
-  "message": "Version restored successfully",
-  "slug": "john-doe-29fa2b",
-  "restored_version": 1,
-  "new_version_created": true
+  "id": "version-id-1",
+  "version_number": 1,
+  "version_state": "committed",
+  "changes_summary": "Initial AI-generated portfolio",
+  "created_at": "2024-02-09T12:00:00Z",
+  "created_by": "ai",
+  "portfolio_json": {
+    "personal_info": { ... },
+    "ai_generated_content": { ... },
+    "data_sources": { ... }
+  }
 }
 ```
 
