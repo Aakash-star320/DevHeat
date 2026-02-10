@@ -1,71 +1,81 @@
-# Resume-to-Portfolio Generator - Backend API v2.0
+# SmartFolio - AI-Powered Portfolio Generator
 
-FastAPI backend for autonomous resume and portfolio generation with AI-powered content generation, code quality analysis, and database persistence. Built for hackathon with production-ready architecture.
+> Transform your professional data into stunning portfolios with personalized coaching insights
 
-## Overview
+A full-stack application that generates professional portfolios by aggregating data from multiple sources including LinkedIn, resumes, GitHub repositories, Codeforces, and LeetCode profiles. Leverages AI to create polished content while maintaining ethical data usage practices.
 
-This application generates professional portfolios by aggregating data from multiple sources including LinkedIn, resumes, GitHub repositories, Codeforces, and LeetCode profiles. It leverages AI to create polished content while maintaining ethical data usage practices.
+---
 
-## New in v2.0
+## Table of Contents
 
-- **AI-Powered Portfolio Generation** using Google Gemini
-- **Database Persistence** (SQLite/PostgreSQL support)
-- **Code Quality Analysis** (heuristic-based, language-agnostic)
-- **Private Coaching Insights** (skill gaps, learning paths, interview prep)
-- **Portfolio Refinement UI** with version management (React frontend)
-- **AI-Assisted Refinement** with confirm/revert workflows
-- **Version History** tracking with draft/committed states
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Setup Instructions](#setup-instructions)
+- [User Workflow](#user-workflow)
+- [API Documentation](#api-documentation)
+- [Frontend Pages](#frontend-pages)
+- [Architecture](#architecture)
+- [Database Schema](#database-schema)
+- [Deployment](#deployment)
+- [Security Notes](#security-notes)
 
 ---
 
 ## Features
 
 ### Portfolio Generation
-
-- **AI Content Generator** - Generates professional summaries, project highlights, and skills using Gemini API
-- **Code Quality Analyzer** - Analyzes GitHub repositories for complexity, documentation, and best practices
+- **AI Content Generation** - Professional summaries, project highlights, and skill assessments using Google Gemini
 - **Multi-Source Aggregation** - Combines LinkedIn, Resume, GitHub, Codeforces, and LeetCode data
+- **Code Quality Analysis** - Analyzes GitHub repositories for complexity, documentation, and best practices
 - **Public/Private Output** - Public portfolio JSON + private coaching insights
 
-### File Upload Endpoints
+### AI-Powered Refinement
+- **Intelligent Refinement** - AI-assisted portfolio editing with natural language instructions
+- **Version Management** - Track all changes with draft/committed states
+- **Confirm/Revert Workflow** - Review changes before committing
+- **Version History** - Complete audit trail of all modifications
 
-- **LinkedIn Profile Parser** (`/upload/linkedin`) - Extracts structured sections from LinkedIn PDFs
-- **Resume Text Extractor** (`/upload/resume`) - Extracts raw text from resume files
+### Private Coaching Insights
+- **Personalized Feedback** - Strengths, areas for improvement, and recommendations
+- **Career Guidance** - Next steps and skill development paths
+- **Beautiful UI** - Color-coded sections with intuitive navigation
 
-### Data Fetching Endpoints
+### Modern Frontend
+- **Responsive Design** - Works seamlessly on desktop, tablet, and mobile
+- **Smooth Animations** - Framer Motion animations and Lenis smooth scrolling
+- **Dynamic Loading** - Rotating messages with time estimates during generation
+- **Interactive UI** - Easy-to-use forms with real-time validation
 
-- **Codeforces Stats** (`/codeforces/{username}`) - Competitive programming statistics
-- **GitHub Analyzer** (`/github/analyze`) - Repository metadata, structure, and README analysis
-- **LeetCode Stats** (`/leetcode/{username}`) - Problem-solving statistics via GraphQL
+---
 
-### Portfolio Endpoints
+## Tech Stack
 
-- **Generate Portfolio** (`POST /portfolio/generate`) - Main orchestrator endpoint
-- **Retrieve Portfolio** (`GET /portfolio/{slug}`) - Get public portfolio JSON
-- **Get Coaching** (`GET /portfolio/{slug}/coaching`) - Get private coaching insights
-- **Check Status** (`GET /portfolio/{slug}/status`) - Poll generation status
-- **Refine Portfolio** (`POST /portfolio/{slug}/refine`) - AI-assisted full portfolio refinement
-- **Confirm Portfolio** (`POST /portfolio/{slug}/confirm`) - Commit draft version
-- **Revert Portfolio** (`POST /portfolio/{slug}/revert`) - Revert to previous version
-- **List Versions** (`GET /portfolio/{slug}/versions`) - Get all version history
-- **Get Version** (`GET /portfolio/{slug}/versions/{version_id}`) - Get specific version content
+### Backend
+- **FastAPI** (0.115.6) - Modern async web framework
+- **Uvicorn** (0.34.0) - ASGI server
+- **SQLAlchemy** (2.0.36+) - Async ORM with PostgreSQL/SQLite support
+- **Alembic** (1.13.1) - Database migrations
+- **Pydantic** - Data validation and serialization
+- **Google Gemini** (0.7.2) - AI content generation
+- **httpx** (0.28.1) - Async HTTP client
+- **pdfplumber** (0.11.4) - PDF text extraction
+- **python-docx** (1.1.2) - DOCX text extraction
 
-### Frontend UI
+### Frontend
+- **React** (19.1.1) - UI library with latest features
+- **Vite** (7.1.7) - Lightning-fast build tool and dev server
+- **React Router DOM** (7.9.3) - Client-side routing
+- **Tailwind CSS** (4.1.14) - Utility-first CSS framework
+- **Framer Motion** (12.23.22) - Production-ready animation library
+- **Lenis** (1.3.11) - Smooth scrolling library
+- **Axios** (1.13.5) - HTTP client for API calls
+- **Lucide React** (0.545.0) - Beautiful icon library
 
-- **Portfolio Generator** (`http://localhost:3000`) - Upload resume/LinkedIn/GitHub data
-- **Refinement UI** (`http://localhost:3000/refine/{slug}`) - Version management interface with:
-  - Two-pane layout (desktop) / dropdown (mobile)
-  - Version selector with status badges (Current/Draft/Committed)
-  - Read-only portfolio preview
-  - AI refinement controls with conditional confirm button
-  - Revert action bar for viewing older versions
-
-### Database & Persistence
-
-- **SQLite** (MVP) or **PostgreSQL** (production)
-- **Async SQLAlchemy** ORM
-- **Alembic** migrations
-- **Portfolio versioning** for edit history
+### External Services
+- **GitHub API** - Repository metadata and analysis
+- **Codeforces API** - Competitive programming statistics
+- **LeetCode GraphQL** - Problem-solving statistics
 
 ---
 
@@ -73,7 +83,7 @@ This application generates professional portfolios by aggregating data from mult
 
 ```
 DevHeat/
-├── app/
+├── app/                                     # Backend application
 │   ├── main.py                              # FastAPI app with lifecycle events
 │   ├── config.py                            # Configuration (API keys, constants)
 │   ├── database.py                          # Database session management
@@ -102,57 +112,83 @@ DevHeat/
 │       ├── validators.py                    # File validation
 │       ├── file_parser.py                   # Text extraction
 │       └── slug.py                          # Slug generation
-├── frontend/
-│   ├── src/                                 # React source files
+│
+├── frontend/                                # React frontend application
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── navbar.jsx                   # Navigation bar with SmartFolio branding
+│   │   │   ├── footer.jsx                   # Footer with links and newsletter
+│   │   │   └── lenis-scroll.jsx             # Smooth scroll wrapper
+│   │   ├── pages/
+│   │   │   ├── LandingPage.jsx              # Home page with features showcase
+│   │   │   ├── GeneratePortfolio.jsx        # Portfolio generation form
+│   │   │   ├── RefinePortfolio.jsx          # Refinement UI with coaching tab
+│   │   │   └── ViewPortfolio.jsx            # Public portfolio display
+│   │   ├── services/
+│   │   │   ├── api.js                       # Axios instance configuration
+│   │   │   └── portfolioService.js          # API methods for portfolio operations
+│   │   ├── App.jsx                          # Main app with routing
+│   │   └── main.jsx                         # Entry point
+│   ├── public/
+│   │   └── favicon.png                      # Favicon
+│   ├── index.html                           # HTML template
 │   ├── package.json                         # Frontend dependencies
-│   └── vite.config.js                       # Vite configuration
+│   ├── vite.config.js                       # Vite configuration
+│   └── tailwind.config.js                   # Tailwind CSS configuration
+│
 ├── alembic/                                 # Database migrations
 │   ├── versions/
 │   │   └── 001_initial_schema.py
 │   ├── env.py
 │   └── script.py.mako
-├── .env                                     # Environment variables
+│
+├── .env                                     # Environment variables (create this)
 ├── .gitignore                               # Git ignore patterns
 ├── alembic.ini                              # Alembic configuration
 ├── requirements.txt                         # Python dependencies
 ├── portfolio.db                             # SQLite database (auto-created)
-└── README.md
+└── README.md                                # This file
 ```
 
 ---
 
 ## Setup Instructions
 
+### Prerequisites
+- **Python** 3.8+
+- **Node.js** 18+ and npm
+- **Git**
+- **GitHub Personal Access Token**
+- **Google Gemini API Key**
+
 ### 1. Clone Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/yourusername/DevHeat.git
 cd DevHeat
 ```
 
-### 2. Create Virtual Environment
+### 2. Backend Setup
 
-```bash
-python -m venv venv
-```
-
-### 3. Activate Virtual Environment
+#### 2.1 Create Virtual Environment
 
 ```bash
 # Windows
+python -m venv venv
 venv\Scripts\activate
 
 # Mac/Linux
+python3 -m venv venv
 source venv/bin/activate
 ```
 
-### 4. Install Backend Dependencies
+#### 2.2 Install Backend Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 5. Configure Environment Variables
+#### 2.3 Configure Environment Variables
 
 Create a `.env` file in the project root:
 
@@ -163,55 +199,126 @@ GITHUB_TOKEN=your_github_personal_access_token_here
 # Google Gemini API Key (for AI content generation)
 GEMINI_API_KEY=your_gemini_api_key_here
 
-# Database URL (SQLite for MVP, PostgreSQL for production)
+# Database URL (SQLite for development, PostgreSQL for production)
 DATABASE_URL=sqlite+aiosqlite:///./portfolio.db
+
+# Optional: Override default host/port
+# HOST=0.0.0.0
+# PORT=8000
 ```
 
 **To get a GitHub token:**
 1. Go to https://github.com/settings/tokens
-2. Generate new token (classic)
+2. Click "Generate new token (classic)"
 3. Select `public_repo` scope
 4. Copy and paste into `.env`
 
 **To get a Gemini API key:**
 1. Go to https://aistudio.google.com/app/apikey
-2. Create API key
+2. Click "Create API key"
 3. Copy and paste into `.env`
 
-### 6. Run Database Migrations
+#### 2.4 Run Database Migrations
 
 ```bash
 alembic upgrade head
 ```
 
-### 7. Run the Backend Server
+#### 2.5 Start Backend Server
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-The API will be available at: `http://localhost:8000`
+Backend will be available at: **http://localhost:8000**
 
-### 8. Install and Run Frontend
+### 3. Frontend Setup
+
+#### 3.1 Navigate to Frontend Directory
 
 ```bash
 cd frontend
+```
+
+#### 3.2 Install Frontend Dependencies
+
+```bash
 npm install
+```
+
+#### 3.3 Configure Frontend Environment (Optional)
+
+Create `frontend/.env` file if you need to override the API URL:
+
+```env
+VITE_API_URL=http://localhost:8000
+```
+
+#### 3.4 Start Frontend Development Server
+
+```bash
 npm run dev
 ```
 
-The frontend will be available at: `http://localhost:3000`
+Frontend will be available at: **http://localhost:5173** (or the port Vite assigns)
 
-### 9. Access Documentation
+### 4. Access the Application
 
-- **Frontend**: http://localhost:3000
-- **Refinement UI**: http://localhost:3000/refine/{slug}
-- **API Swagger UI**: http://localhost:8000/docs
+- **Frontend**: http://localhost:5173
+- **API Documentation**: http://localhost:8000/docs
 - **API ReDoc**: http://localhost:8000/redoc
 
 ---
 
-## API Endpoints
+## User Workflow
+
+### 1. Landing Page
+- Visit the home page to learn about SmartFolio
+- Click "Generate Portfolio" to start
+
+### 2. Generate Portfolio
+- Fill in your basic information (name, portfolio focus)
+- Upload documents (LinkedIn PDF, Resume)
+- Add GitHub repository URLs (up to 5)
+- Enter competitive programming usernames (Codeforces, LeetCode)
+- Click "Generate Portfolio with AI"
+- Watch dynamic loading messages (30-60 seconds)
+
+### 3. Refine Portfolio
+- View your AI-generated portfolio content
+- Switch to "Private Coaching" tab to see personalized insights:
+  - Overall Assessment
+  - Strengths
+  - Areas for Improvement
+  - Recommendations
+  - Next Steps
+- Use AI refinement to improve specific sections
+- Review and confirm changes
+- View version history and revert if needed
+
+### 4. View Public Portfolio
+- Click "View Public Portfolio" to see the final result
+- Share the portfolio URL with recruiters
+- All data is beautifully presented with:
+  - Professional summary
+  - Work experience
+  - Projects with technologies and highlights
+  - Skills and achievements
+  - GitHub projects
+  - Competitive programming stats
+  - Contact information
+
+---
+
+## API Documentation
+
+### Base URL
+```
+http://localhost:8000
+```
+
+### Authentication
+Currently no authentication required for public endpoints. Private coaching endpoint should be secured in production.
 
 ### Health Check
 
@@ -220,40 +327,45 @@ GET /
 GET /health
 ```
 
-Returns API status and available endpoints.
+Returns API status and version information.
 
 ---
 
-## Portfolio Generation Workflow
+### Portfolio Generation
 
-### 1. Generate Portfolio
+#### Generate Portfolio
 
 ```bash
 POST /portfolio/generate
 ```
 
 **Request (multipart/form-data):**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| name | string | Yes | Full name |
+| portfolio_focus | string | No | Focus area: `general`, `fullstack`, `backend`, `ml`, `competitive` |
+| linkedin_file | file | No | LinkedIn PDF export |
+| resume_file | file | No | Resume PDF/DOCX |
+| github_repos | JSON array | No | GitHub repository URLs (max 5) |
+| codeforces_username | string | No | Codeforces handle |
+| leetcode_username | string | No | LeetCode username |
+
+**Example:**
+
 ```bash
 curl -X POST "http://localhost:8000/portfolio/generate" \
   -F "name=John Doe" \
   -F "portfolio_focus=fullstack" \
   -F "linkedin_file=@linkedin.pdf" \
   -F "resume_file=@resume.pdf" \
-  -F 'github_repos=["https://github.com/user/repo1", "https://github.com/user/repo2"]' \
+  -F 'github_repos=["https://github.com/user/repo1"]' \
   -F "codeforces_username=tourist" \
   -F "leetcode_username=johndoe"
 ```
 
-**Parameters:**
-- `name` (required): Full name
-- `portfolio_focus` (optional): Focus area (`fullstack`, `backend`, `ml`, `competitive`, `general`)
-- `linkedin_file` (optional): LinkedIn PDF
-- `resume_file` (optional): Resume PDF
-- `github_repos` (optional): JSON array of GitHub repo URLs (max 5)
-- `codeforces_username` (optional): Codeforces handle
-- `leetcode_username` (optional): LeetCode username
-
 **Response:**
+
 ```json
 {
   "portfolio_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -267,57 +379,103 @@ curl -X POST "http://localhost:8000/portfolio/generate" \
 
 ---
 
-### 2. Retrieve Public Portfolio
+#### Get Portfolio
 
 ```bash
 GET /portfolio/{slug}
 ```
 
-**Example:**
-```bash
-curl -X GET "http://localhost:8000/portfolio/john-doe-29fa2b"
-```
+Returns complete public portfolio JSON.
 
-**Response:** Complete public portfolio JSON with:
-- Personal info (name, slug, focus)
-- AI-generated content (professional summary, key strengths, project highlights, skills)
-- Data sources (GitHub projects, competitive programming stats, skills)
-- Code quality metrics
-- Metadata (generated timestamp, sources used)
+**Response Structure:**
+
+```json
+{
+  "personal_info": {
+    "name": "John Doe",
+    "slug": "john-doe-29fa2b",
+    "portfolio_focus": "fullstack"
+  },
+  "ai_generated_content": {
+    "professional_summary": "...",
+    "key_strengths": ["..."],
+    "project_highlights": [...],
+    "skills": ["..."],
+    "work_experience": [...],
+    "achievements": ["..."],
+    "skills_summary": {
+      "languages": ["..."],
+      "frameworks": ["..."],
+      "tools": ["..."]
+    },
+    "contact_info": {
+      "email": "...",
+      "linkedin": "...",
+      "github": "..."
+    }
+  },
+  "data_sources": {
+    "github_projects": [...],
+    "competitive_programming": {
+      "codeforces": {...},
+      "leetcode": {...}
+    }
+  },
+  "code_quality_metrics": {...},
+  "metadata": {
+    "generated_at": "2024-02-09T12:00:00Z",
+    "data_sources_used": ["resume", "github", "leetcode"]
+  }
+}
+```
 
 ---
 
-### 3. Retrieve Private Coaching
+#### Get Coaching Insights
 
 ```bash
 GET /portfolio/{slug}/coaching
 ```
 
-**Example:**
-```bash
-curl -X GET "http://localhost:8000/portfolio/john-doe-29fa2b/coaching"
-```
+Returns private coaching insights with personalized recommendations.
 
-**Response:** Private coaching JSON with:
-- Skill analysis (strengths, gaps)
-- Learning path (immediate, short-term, long-term)
-- Interview prep (likely questions, talking points)
-- Market positioning (target roles, competitive advantages, resume improvements)
+**Response Structure:**
+
+```json
+{
+  "overall_assessment": "Comprehensive assessment text...",
+  "strengths": [
+    "Strong full-stack development experience",
+    "Excellent problem-solving skills"
+  ],
+  "areas_for_improvement": [
+    {
+      "area": "System Design",
+      "suggestion": "Consider studying distributed systems..."
+    }
+  ],
+  "recommendations": [
+    "Build a microservices project",
+    "Contribute to open-source projects"
+  ],
+  "next_steps": [
+    "Complete system design course",
+    "Practice LeetCode medium problems",
+    "Build portfolio website"
+  ]
+}
+```
 
 ---
 
-### 4. Check Generation Status
+#### Check Status
 
 ```bash
 GET /portfolio/{slug}/status
 ```
 
-**Example:**
-```bash
-curl -X GET "http://localhost:8000/portfolio/john-doe-29fa2b/status"
-```
-
 **Response:**
+
 ```json
 {
   "portfolio_id": "...",
@@ -337,42 +495,16 @@ curl -X GET "http://localhost:8000/portfolio/john-doe-29fa2b/status"
 
 ---
 
-### 5. Edit Portfolio (Manual)
+### Portfolio Refinement
 
-```bash
-PATCH /portfolio/{slug}
-```
-
-**Request:**
-```json
-{
-  "updates": {
-    "professional_summary": "Updated summary text...",
-    "key_strengths": ["New strength 1", "New strength 2"]
-  },
-  "changes_summary": "Updated summary and strengths"
-}
-```
-
-**Response:**
-```json
-{
-  "message": "Portfolio updated successfully",
-  "slug": "john-doe-29fa2b",
-  "version_created": true,
-  "updated_portfolio": { ... }
-}
-```
-
----
-
-### 6. Refine Portfolio (AI-Assisted)
+#### Refine Portfolio
 
 ```bash
 POST /portfolio/{slug}/refine
 ```
 
 **Request:**
+
 ```json
 {
   "instruction": "Make the professional summary more concise and emphasize backend skills",
@@ -381,84 +513,54 @@ POST /portfolio/{slug}/refine
 ```
 
 **Response:**
+
 ```json
 {
   "message": "Portfolio refined successfully",
-  "version_id": "550e8400-e29b-41d4-a716-446655440001",
+  "version_id": "...",
   "version_number": 2,
   "version_state": "draft",
-  "changes_summary": "AI refinement: Make the professional summary more concise...",
-  "portfolio_json": { ... }
+  "changes_summary": "AI refinement: Make the professional summary...",
+  "portfolio_json": {...}
 }
 ```
 
-**Notes:**
-- Creates a new **draft** version
-- Refinement applies to the entire portfolio based on instruction
-- Must confirm the draft to make it the committed version
-
 ---
 
-### 6a. Confirm Portfolio (Commit Draft)
+#### Confirm Draft
 
 ```bash
 POST /portfolio/{slug}/confirm
 ```
 
-**Response:**
-```json
-{
-  "message": "Portfolio confirmed successfully",
-  "version_id": "550e8400-e29b-41d4-a716-446655440001",
-  "version_number": 2,
-  "version_state": "committed"
-}
-```
-
-**Notes:**
-- Commits the current draft version
-- Deletes all other versions (only one committed version remains)
-- Cannot be undone
+Commits the current draft version and deletes other versions.
 
 ---
 
-### 6b. Revert Portfolio
+#### Revert to Version
 
 ```bash
 POST /portfolio/{slug}/revert
 ```
 
 **Request:**
+
 ```json
 {
   "version_id": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
-**Response:**
-```json
-{
-  "message": "Portfolio reverted successfully",
-  "version_id": "550e8400-e29b-41d4-a716-446655440000",
-  "version_number": 1,
-  "version_state": "committed"
-}
-```
-
-**Notes:**
-- Reverts to the specified version
-- Deletes all other versions
-- Cannot be undone
-
 ---
 
-### 7. View Version History
+#### Get Version History
 
 ```bash
 GET /portfolio/{slug}/versions?limit=50
 ```
 
 **Response:**
+
 ```json
 {
   "versions": [
@@ -469,324 +571,178 @@ GET /portfolio/{slug}/versions?limit=50
       "changes_summary": "AI refinement: Make it more concise",
       "created_at": "2024-02-09T14:30:00Z",
       "created_by": "ai_refinement"
-    },
-    {
-      "id": "version-id-1",
-      "version_number": 1,
-      "version_state": "committed",
-      "changes_summary": "Initial AI-generated portfolio",
-      "created_at": "2024-02-09T12:00:00Z",
-      "created_by": "ai"
     }
   ],
   "total_count": 2
 }
 ```
 
-**Version States:**
-- `draft` - Unconfirmed refinement
-- `committed` - Confirmed version
-
 ---
 
-### 8. Get Specific Version Content
+### Data Extraction Endpoints
 
-```bash
-GET /portfolio/{slug}/versions/{version_id}
-```
-
-**Response:**
-```json
-{
-  "id": "version-id-1",
-  "version_number": 1,
-  "version_state": "committed",
-  "changes_summary": "Initial AI-generated portfolio",
-  "created_at": "2024-02-09T12:00:00Z",
-  "created_by": "ai",
-  "portfolio_json": {
-    "personal_info": { ... },
-    "ai_generated_content": { ... },
-    "data_sources": { ... }
-  }
-}
-```
-
----
-
-## Data Extraction Endpoints
-
-### Upload LinkedIn Profile
+#### Upload LinkedIn Profile
 
 ```bash
 POST /upload/linkedin
 ```
 
-**Request:**
-```bash
-curl -X POST "http://localhost:8000/upload/linkedin" \
-  -H "accept: application/json" \
-  -H "Content-Type: multipart/form-data" \
-  -F "file=@linkedin.pdf"
-```
-
-**Response:**
-```json
-{
-  "summary": "...",
-  "experience_raw": "...",
-  "education_raw": "...",
-  "skills_raw": "..."
-}
-```
+Extracts structured sections from LinkedIn PDF export.
 
 ---
 
-### Upload Resume
+#### Upload Resume
 
 ```bash
 POST /upload/resume
 ```
 
-**Request:**
-```bash
-curl -X POST "http://localhost:8000/upload/resume" \
-  -F "file=@resume.pdf"
-```
-
-**Response:**
-```json
-{
-  "resume_text": "full extracted text..."
-}
-```
+Extracts raw text from resume PDF/DOCX.
 
 ---
 
-### Get Codeforces Statistics
+#### Get Codeforces Stats
 
 ```bash
 GET /codeforces/{username}
 ```
 
-**Example:** `/codeforces/tourist`
-
-**Response:**
-```json
-{
-  "username": "tourist",
-  "current_rating": 3858,
-  "max_rating": 4229,
-  "rank": "legendary grandmaster",
-  "contest_count": 156,
-  "problems_solved": 2847
-}
-```
+Returns competitive programming statistics.
 
 ---
 
-### Analyze GitHub Repositories
+#### Analyze GitHub Repositories
 
 ```bash
 POST /github/analyze
 ```
 
 **Request:**
+
 ```json
 {
   "repos": [
-    "https://github.com/octocat/Hello-World",
-    "https://github.com/torvalds/linux"
+    "https://github.com/user/repo1",
+    "https://github.com/user/repo2"
   ]
 }
 ```
 
-**Response:**
-```json
-{
-  "repos": [
-    {
-      "name": "Hello-World",
-      "description": "My first repository",
-      "primary_language": "Python",
-      "last_updated": "2024-01-15T10:30:00Z",
-      "readme_text": "# Hello World...",
-      "readme_length": 1250,
-      "structure": {
-        "files": 42,
-        "folders": 15,
-        "max_depth": 5,
-        "top_dirs": ["src", "tests", "docs"],
-        "largest_file_kb": 125.5,
-        "has_tests": true
-      }
-    }
-  ]
-}
-```
+Returns repository metadata, structure analysis, and quality metrics.
 
 ---
 
-### Get LeetCode Statistics
+#### Get LeetCode Stats
 
 ```bash
 GET /leetcode/{username}
 ```
 
-**Example:** `/leetcode/lee215`
-
-**Response:**
-```json
-{
-  "username": "lee215",
-  "total_solved": 2500,
-  "easy_solved": 800,
-  "medium_solved": 1200,
-  "hard_solved": 500,
-  "profile_url": "https://leetcode.com/lee215"
-}
-```
+Returns problem-solving statistics via GraphQL.
 
 ---
 
-## Testing
+## Frontend Pages
 
-### Install Dependencies
+### 1. Landing Page (`/`)
+- Hero section with gradient background
+- Features showcase
+- Testimonials
+- Call-to-action buttons
 
-```bash
-pip install -r requirements.txt
-```
+### 2. Generate Portfolio (`/generate`)
+- Multi-section form with animations
+- Dynamic loading states
+- Time estimates (30-60 seconds)
+- Rotating messages during generation:
+  - "Analyzing your professional profile..."
+  - "Fetching GitHub repositories..."
+  - "Generating AI-powered insights..."
+  - And more!
 
-### Run Server
+### 3. Refine Portfolio (`/refine/:slug`)
+- Two-tab interface: Portfolio | Private Coaching
+- Portfolio tab:
+  - Professional summary
+  - Key strengths
+  - Project highlights
+  - Skills
+- Private Coaching tab:
+  - Overall Assessment (Indigo)
+  - Strengths (Green)
+  - Areas for Improvement (Yellow)
+  - Recommendations (Blue)
+  - Next Steps (Purple)
+- AI refinement controls
+- Version management
+- Confirm/revert actions
 
-```bash
-uvicorn app.main:app --reload
-```
-
-### Test Portfolio Generation (All Sources)
-
-```bash
-curl -X POST "http://localhost:8000/portfolio/generate" \
-  -F "name=John Doe" \
-  -F "portfolio_focus=fullstack" \
-  -F "linkedin_file=@test_data/linkedin.pdf" \
-  -F "resume_file=@test_data/resume.pdf" \
-  -F 'github_repos=["https://github.com/octocat/Hello-World"]' \
-  -F "codeforces_username=tourist" \
-  -F "leetcode_username=lee215"
-```
-
-### Test Portfolio Retrieval
-
-```bash
-# Get public portfolio
-curl -X GET "http://localhost:8000/portfolio/john-doe-29fa2b"
-
-# Get private coaching
-curl -X GET "http://localhost:8000/portfolio/john-doe-29fa2b/coaching"
-
-# Check status
-curl -X GET "http://localhost:8000/portfolio/john-doe-29fa2b/status"
-```
-
-### Test Portfolio Editing
-
-```bash
-# Manual edit
-curl -X PATCH "http://localhost:8000/portfolio/john-doe-29fa2b" \
-  -H "Content-Type: application/json" \
-  -d '{"updates": {"professional_summary": "Updated text"}, "changes_summary": "Manual edit"}'
-
-# AI refinement
-curl -X POST "http://localhost:8000/portfolio/john-doe-29fa2b/refine" \
-  -H "Content-Type: application/json" \
-  -d '{"section": "professional_summary", "instruction": "make it more concise"}'
-```
+### 4. View Portfolio (`/portfolio/:slug`)
+- Beautiful public portfolio display
+- Responsive grid layout
+- Sections:
+  - Professional Summary
+  - Work Experience
+  - Featured Projects
+  - Achievements
+  - Skills & Technologies
+  - GitHub Projects
+  - Competitive Programming Stats
+  - Contact Information
 
 ---
 
-## Architecture Principles
+## Architecture
 
-### Ethical AI Usage
+### Backend Architecture
 
+#### Ethical AI Usage
 - AI receives ONLY: metadata, README text, statistics
 - AI NEVER receives: source code, file contents (except README), code snippets
 - All inputs are sanitized in `prepare_ai_context()`
 
-### Language-Agnostic Analysis
-
+#### Language-Agnostic Analysis
 - Code quality based on structure, not semantics
 - Works for any programming language
 - Heuristic-based scoring (complexity, documentation, best practices)
 
-### Separation of Concerns
-
+#### Separation of Concerns
 - **Public Portfolio**: Recruiter-facing, polished content
 - **Private Coaching**: User-only, honest feedback and improvement suggestions
 
-### Graceful Degradation
-
+#### Graceful Degradation
 - Missing data sources handled gracefully
 - External API failures don't break generation
 - AI failures fall back to template-based content
 
----
+### Frontend Architecture
 
-## Tech Stack
+#### Component Structure
+- **Navbar**: Sticky navigation with smooth animations
+- **Footer**: Links, newsletter subscription, copyright
+- **LenisScroll**: Smooth scrolling wrapper
+- **Pages**: Separate components for each route
 
-### Backend
+#### State Management
+- React hooks (useState, useEffect)
+- Local state for form data
+- API calls via Axios
 
-- **FastAPI** (0.115.6) - Modern async web framework
-- **Uvicorn** (0.34.0) - ASGI server
-- **Pydantic** - Data validation and serialization
-- **SQLAlchemy** (2.0.36+) - Async ORM
-- **Alembic** (1.13.1) - Database migrations
-- **aiosqlite** (0.19.0) - Async SQLite driver
+#### Routing
+- React Router DOM v7
+- Client-side navigation
+- Dynamic routes for portfolio slugs
 
-### Frontend
+#### Styling
+- Tailwind CSS utility classes
+- Custom color schemes
+- Responsive breakpoints
+- Dark theme by default
 
-- **React** (18.2.0) - UI library
-- **React Router** (6.20.0) - Client-side routing
-- **Vite** (5.0.0) - Build tool and dev server
-- **Axios** (1.6.0) - HTTP client
-
-### AI & External Services
-
-- **Google Gemini** (google-generativeai 0.7.2) - AI content generation
-- **httpx** (0.28.1) - Async HTTP client for external APIs
-
-### File Processing
-
-- **pdfplumber** (0.11.4) - PDF text extraction
-- **python-docx** (1.1.2) - DOCX text extraction
-
-### Utilities
-
-- **python-dotenv** (1.0.1) - Environment variable management
-- **Jinja2** (3.1.3) - Template engine
-
----
-
-## Deployment
-
-### Development
-
-```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Production
-
-```bash
-# Update DATABASE_URL to PostgreSQL
-DATABASE_URL=postgresql+asyncpg://user:pass@localhost/portfolio
-
-# Run migrations
-alembic upgrade head
-
-# Start with multiple workers
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
-```
+#### Animations
+- Framer Motion for page transitions
+- Spring animations for buttons
+- Smooth scroll with Lenis
 
 ---
 
@@ -795,70 +751,148 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 ### Portfolios Table
 
 ```sql
-- id: UUID (PK)
-- slug: String (unique, indexed)
-- name: String
-- portfolio_focus: String (enum)
-- status: String (enum: draft, generating, completed, error)
+CREATE TABLE portfolios (
+  id UUID PRIMARY KEY,
+  slug VARCHAR(255) UNIQUE NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  portfolio_focus VARCHAR(50),
+  status VARCHAR(20) NOT NULL,
 
--- Data source flags
-- has_linkedin, has_resume, has_github, has_codeforces, has_leetcode: Boolean
+  -- Data source flags
+  has_linkedin BOOLEAN DEFAULT FALSE,
+  has_resume BOOLEAN DEFAULT FALSE,
+  has_github BOOLEAN DEFAULT FALSE,
+  has_codeforces BOOLEAN DEFAULT FALSE,
+  has_leetcode BOOLEAN DEFAULT FALSE,
 
--- Raw input data (JSON)
-- linkedin_data, resume_text, github_data, codeforces_data, leetcode_data
+  -- Raw input data (JSON)
+  linkedin_data JSONB,
+  resume_text TEXT,
+  github_data JSONB,
+  codeforces_data JSONB,
+  leetcode_data JSONB,
 
--- Generated output (JSON)
-- public_portfolio_json, private_coaching_json, ai_generation_metadata
+  -- Generated output (JSON)
+  public_portfolio_json JSONB,
+  private_coaching_json JSONB,
+  ai_generation_metadata JSONB,
 
--- Timestamps
-- generation_started_at, generation_completed_at, created_at, updated_at
+  -- Timestamps
+  generation_started_at TIMESTAMP,
+  generation_completed_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_portfolios_slug ON portfolios(slug);
+CREATE INDEX idx_portfolios_status ON portfolios(status);
 ```
 
 ### Portfolio Versions Table
 
 ```sql
-- id: UUID (PK)
-- portfolio_id: UUID (FK)
-- version_number: Integer
-- version_state: String (enum: draft, committed)
-- public_portfolio_json, private_coaching_json: JSON
-- changes_summary: Text
-- created_by: String (enum: ai, user_manual, ai_refinement)
-- created_at: DateTime
+CREATE TABLE portfolio_versions (
+  id UUID PRIMARY KEY,
+  portfolio_id UUID REFERENCES portfolios(id) ON DELETE CASCADE,
+  version_number INTEGER NOT NULL,
+  version_state VARCHAR(20) NOT NULL,
+  public_portfolio_json JSONB NOT NULL,
+  private_coaching_json JSONB,
+  changes_summary TEXT,
+  created_by VARCHAR(50),
+  created_at TIMESTAMP DEFAULT NOW(),
+
+  UNIQUE(portfolio_id, version_number)
+);
+
+CREATE INDEX idx_versions_portfolio_id ON portfolio_versions(portfolio_id);
+CREATE INDEX idx_versions_state ON portfolio_versions(version_state);
 ```
 
 ---
 
-## Error Handling
+## Deployment
 
-### 400 Bad Request
+### Development
 
-- Invalid file type
-- File too large (>5MB)
-- Empty file
-- Invalid GitHub URLs
-- Missing required fields
+**Backend:**
+```bash
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
 
-### 404 Not Found
+**Frontend:**
+```bash
+cd frontend
+npm run dev
+```
 
-- Portfolio not found
-- Version not found
+### Production
 
-### 202 Accepted
+#### Backend Deployment
 
-- Portfolio still generating (check status endpoint)
+```bash
+# Update DATABASE_URL to PostgreSQL
+export DATABASE_URL=postgresql+asyncpg://user:pass@localhost/portfolio
 
-### 500 Internal Server Error
+# Run migrations
+alembic upgrade head
 
-- AI generation failure (falls back to templates)
-- External API failure (continues with available data)
-- Database errors
+# Start with multiple workers
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+```
+
+#### Frontend Deployment
+
+```bash
+cd frontend
+
+# Build for production
+npm run build
+
+# Deploy dist/ folder to hosting service (Vercel, Netlify, etc.)
+```
+
+#### Environment Variables for Production
+
+**Backend (.env):**
+```env
+DATABASE_URL=postgresql+asyncpg://user:pass@host/db
+GITHUB_TOKEN=your_token
+GEMINI_API_KEY=your_key
+CORS_ORIGINS=https://yourdomain.com
+```
+
+**Frontend (.env.production):**
+```env
+VITE_API_URL=https://api.yourdomain.com
+```
+
+---
+
+## Security Notes
+
+### Current Limitations (Development)
+- **CORS**: Allows all origins (`*`) - restrict for production
+- **Authentication**: Not implemented - add JWT/OAuth for production
+- **API Keys**: Stored in `.env` file - use secrets manager for production
+- **Rate Limiting**: Relies on external API limits - add middleware for production
+- **Input Validation**: Basic validation - enhance for production
+
+### Production Recommendations
+1. **Add Authentication**: JWT tokens for private coaching endpoint
+2. **Configure CORS**: Whitelist specific domains
+3. **Add Rate Limiting**: Prevent abuse
+4. **Use HTTPS**: Enable SSL/TLS
+5. **Secrets Management**: Use AWS Secrets Manager, Azure Key Vault, etc.
+6. **Input Sanitization**: Add comprehensive validation
+7. **Error Handling**: Don't expose internal errors to clients
+8. **Logging**: Add structured logging with sensitive data redaction
 
 ---
 
 ## Performance
 
-### Free Tier Limits
+### API Rate Limits
 
 **Gemini API (Free Tier):**
 - 15 requests per minute
@@ -870,39 +904,96 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 
 **Codeforces & LeetCode:**
 - Public APIs, no authentication required
+- Best effort rate limiting
+
+### Optimization Tips
+- Use caching for external API responses
+- Implement request queuing for AI generation
+- Add database indexes for frequently queried fields
+- Use CDN for frontend assets
+- Enable gzip compression
+- Implement lazy loading for images
 
 ---
 
-## Hackathon Features
+## Contributing
 
-- Ethical data usage (no scraping)
-- Language-agnostic code analysis
-- AI used strategically (not for code review)
-- Free-tier friendly (Gemini, GitHub, public APIs)
-- Deterministic demo (sample data support)
-- Single deployment (dynamic portfolio routes)
-- Version control for edits
-- Public/private data separation
+This project was built for a hackathon. If you'd like to contribute:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ---
 
-## Security Notes
+## Troubleshooting
 
-- **CORS**: Currently allows all origins (`*`) - update for production
-- **Authentication**: Not implemented for private coaching endpoint - add JWT for production
-- **API Keys**: Stored in `.env` file - use secrets manager for production
-- **Rate Limiting**: Relies on external API limits - add middleware for production
+### Backend Issues
+
+**Database Migration Errors:**
+```bash
+# Reset database
+alembic downgrade base
+alembic upgrade head
+```
+
+**Port Already in Use:**
+```bash
+# Change port
+uvicorn app.main:app --port 8001
+```
+
+**API Key Errors:**
+- Verify `.env` file exists in project root
+- Check API key validity
+- Ensure no extra spaces in `.env` file
+
+### Frontend Issues
+
+**Build Errors:**
+```bash
+# Clear node_modules and reinstall
+rm -rf node_modules package-lock.json
+npm install
+```
+
+**API Connection Issues:**
+- Check `VITE_API_URL` in frontend/.env
+- Verify backend is running
+- Check CORS configuration
+
+**Styling Issues:**
+```bash
+# Rebuild Tailwind CSS
+npm run build
+```
 
 ---
 
 ## License
 
-Built for hackathon use.
+Built for hackathon use. Feel free to use and modify as needed.
 
 ---
 
 ## Acknowledgments
 
-- **FastAPI** - Excellent async framework
+- **FastAPI** - Excellent async web framework
+- **React** - Powerful UI library
 - **Google Gemini** - Free-tier AI API
-- **GitHub, Codeforces, LeetCode** - Public APIs
+- **Tailwind CSS** - Utility-first CSS framework
+- **Framer Motion** - Beautiful animations
+- **GitHub, Codeforces, LeetCode** - Public APIs for data aggregation
+- **PrebuiltUI** - Original Agentix template design inspiration
+
+---
+
+## Contact
+
+For questions or support, please open an issue on GitHub.
+
+---
+
+**Built with** ❤️ **for developers, by developers**
