@@ -8,6 +8,7 @@ venv/
 env/
 ENV/
 .venv
+app/venv/
 
 portfolio.db
 # IDE
@@ -20,6 +21,11 @@ portfolio.db
 # OS
 .DS_Store
 Thumbs.db
+Desktop.ini
+nul
+.Spotlight-V100
+.Trashes
+._*
 
 # Testing
 .pytest_cache/
@@ -36,6 +42,11 @@ temp/
 
 # Database
 portfolio.db
+portfolios.db
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
 
 # Logs
 logs/
