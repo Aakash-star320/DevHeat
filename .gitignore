@@ -43,3 +43,24 @@ logs/
 last_*_prompt.txt
 last_*_response.txt
 last_*_error.txt
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Vite
+.vite/
+*.local
+
+# Dependency directories
+jspm_packages/
