@@ -102,11 +102,12 @@ async def generate_portfolio(
         portfolio.has_leetcode = data_results["leetcode_data"] is not None
 
         # Convert Pydantic models to dictionaries for JSON serialization
-        portfolio.linkedin_data = data_results["linkedin_data"].model_dump() if data_results["linkedin_data"] else None
+        # Note: _to_serializable() already converts Pydantic models to dicts
+        portfolio.linkedin_data = data_results["linkedin_data"]
         portfolio.resume_text = data_results["resume_text"]
-        portfolio.github_data = [repo.model_dump() for repo in data_results["github_data"]] if data_results["github_data"] else None
-        portfolio.codeforces_data = data_results["codeforces_data"].model_dump() if data_results["codeforces_data"] else None
-        portfolio.leetcode_data = data_results["leetcode_data"].model_dump() if data_results["leetcode_data"] else None
+        portfolio.github_data = data_results["github_data"]
+        portfolio.codeforces_data = data_results["codeforces_data"]
+        portfolio.leetcode_data = data_results["leetcode_data"]
 
         await db.commit()
 
@@ -114,22 +115,21 @@ async def generate_portfolio(
         code_quality_metrics = None
         if data_results["github_data"]:
             try:
-                # Convert Pydantic models to dicts for code quality service
-                github_data_dicts = [repo.model_dump() for repo in data_results["github_data"]]
-                code_quality_metrics = analyze_portfolio_quality(github_data_dicts)
+                # data_results already contains dicts, no need to convert again
+                code_quality_metrics = analyze_portfolio_quality(data_results["github_data"])
                 logger.info(f"Code quality analysis completed. Overall score: {code_quality_metrics.get('overall_score', 0)}")
             except Exception as e:
                 logger.error(f"Code quality analysis failed: {e}")
 
-        # 6. Prepare AI context (convert Pydantic models to dicts for AI service)
+        # 6. Prepare AI context (data_results already contains dicts)
         ai_context_data = {
             "name": name,
             "portfolio_focus": portfolio_focus,
-            "linkedin_data": data_results["linkedin_data"].model_dump() if data_results["linkedin_data"] else None,
+            "linkedin_data": data_results["linkedin_data"],
             "resume_text": data_results["resume_text"],
-            "github_data": [repo.model_dump() for repo in data_results["github_data"]] if data_results["github_data"] else None,
-            "codeforces_data": data_results["codeforces_data"].model_dump() if data_results["codeforces_data"] else None,
-            "leetcode_data": data_results["leetcode_data"].model_dump() if data_results["leetcode_data"] else None,
+            "github_data": data_results["github_data"],
+            "codeforces_data": data_results["codeforces_data"],
+            "leetcode_data": data_results["leetcode_data"],
             "code_quality_metrics": code_quality_metrics
         }
         ai_context = prepare_ai_context(ai_context_data)
@@ -169,13 +169,13 @@ async def generate_portfolio(
             "portfolio_focus": portfolio_focus
         }
 
-        # Convert data_results Pydantic models to dicts for portfolio builder
+        # data_results already contains dicts, use directly
         data_sources_dicts = {
-            "linkedin_data": data_results["linkedin_data"].model_dump() if data_results["linkedin_data"] else None,
+            "linkedin_data": data_results["linkedin_data"],
             "resume_text": data_results["resume_text"],
-            "github_data": [repo.model_dump() for repo in data_results["github_data"]] if data_results["github_data"] else None,
-            "codeforces_data": data_results["codeforces_data"].model_dump() if data_results["codeforces_data"] else None,
-            "leetcode_data": data_results["leetcode_data"].model_dump() if data_results["leetcode_data"] else None
+            "github_data": data_results["github_data"],
+            "codeforces_data": data_results["codeforces_data"],
+            "leetcode_data": data_results["leetcode_data"]
         }
 
         public_portfolio_json = build_public_portfolio_json(
@@ -323,20 +323,21 @@ def _to_serializable(obj):
     """Helper to convert Pydantic models to dictionaries recursively"""
     if obj is None:
         return None
-        
-    # Handle Pydantic models
-    if hasattr(obj, "model_dump"):
-        return obj.model_dump()
-    if hasattr(obj, "dict"):
-        return obj.dict()
-        
+    
+    # Handle dictionaries FIRST (before checking for model_dump)
+    # This prevents trying to call model_dump on already-converted dicts
+    if isinstance(obj, dict):
+        return {k: _to_serializable(v) for k, v in obj.items()}
+    
     # Handle lists (like GitHub repos)
     if isinstance(obj, list):
         return [_to_serializable(item) for item in obj]
         
-    # Handle dictionaries (might contain Pydantic models)
-    if isinstance(obj, dict):
-        return {k: _to_serializable(v) for k, v in obj.items()}
+    # Handle Pydantic models (only if not already a dict)
+    if hasattr(obj, "model_dump"):
+        return obj.model_dump()
+    if hasattr(obj, "dict"):
+        return obj.dict()
         
     return obj
 

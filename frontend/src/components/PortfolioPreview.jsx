@@ -32,9 +32,10 @@ function PortfolioPreview({ portfolio }) {
                             <h3>{exp.title || exp.role} {exp.company && `at ${exp.company}`}</h3>
                             {exp.duration && <p className="date">{exp.duration}</p>}
                             {exp.description && <p>{exp.description}</p>}
-                            {exp.responsibilities && (
+                            {/* Support both responsibilities and description_bullets */}
+                            {(exp.responsibilities || exp.description_bullets) && (
                                 <ul>
-                                    {exp.responsibilities.map((resp, i) => (
+                                    {(exp.responsibilities || exp.description_bullets).map((resp, i) => (
                                         <li key={i}>{resp}</li>
                                     ))}
                                 </ul>
