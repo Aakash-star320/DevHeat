@@ -2,7 +2,11 @@
 
 FastAPI backend for autonomous resume and portfolio generation with AI-powered content generation, code quality analysis, and database persistence. Built for hackathon with production-ready architecture.
 
-## 🎯 New in v2.0
+## Overview
+
+This application generates professional portfolios by aggregating data from multiple sources including LinkedIn, resumes, GitHub repositories, Codeforces, and LeetCode profiles. It leverages AI to create polished content while maintaining ethical data usage practices.
+
+## New in v2.0
 
 - **AI-Powered Portfolio Generation** using Google Gemini
 - **Database Persistence** (SQLite/PostgreSQL support)
@@ -14,24 +18,28 @@ FastAPI backend for autonomous resume and portfolio generation with AI-powered c
 
 ---
 
-## 🚀 Features
+## Features
 
-### Portfolio Generation (NEW)
+### Portfolio Generation
+
 - **AI Content Generator** - Generates professional summaries, project highlights, and skills using Gemini API
 - **Code Quality Analyzer** - Analyzes GitHub repositories for complexity, documentation, and best practices
 - **Multi-Source Aggregation** - Combines LinkedIn, Resume, GitHub, Codeforces, and LeetCode data
 - **Public/Private Output** - Public portfolio JSON + private coaching insights
 
 ### File Upload Endpoints
+
 - **LinkedIn Profile Parser** (`/upload/linkedin`) - Extracts structured sections from LinkedIn PDFs
 - **Resume Text Extractor** (`/upload/resume`) - Extracts raw text from resume files
 
 ### Data Fetching Endpoints
+
 - **Codeforces Stats** (`/codeforces/{username}`) - Competitive programming statistics
 - **GitHub Analyzer** (`/github/analyze`) - Repository metadata, structure, and README analysis
 - **LeetCode Stats** (`/leetcode/{username}`) - Problem-solving statistics via GraphQL
 
-### Portfolio Endpoints (NEW)
+### Portfolio Endpoints
+
 - **Generate Portfolio** (`POST /portfolio/generate`) - Main orchestrator endpoint
 - **Retrieve Portfolio** (`GET /portfolio/{slug}`) - Get public portfolio JSON
 - **Get Coaching** (`GET /portfolio/{slug}/coaching`) - Get private coaching insights
@@ -42,7 +50,8 @@ FastAPI backend for autonomous resume and portfolio generation with AI-powered c
 - **List Versions** (`GET /portfolio/{slug}/versions`) - Get all version history
 - **Get Version** (`GET /portfolio/{slug}/versions/{version_id}`) - Get specific version content
 
-### Frontend UI (NEW)
+### Frontend UI
+
 - **Portfolio Generator** (`http://localhost:3000`) - Upload resume/LinkedIn/GitHub data
 - **Refinement UI** (`http://localhost:3000/refine/{slug}`) - Version management interface with:
   - Two-pane layout (desktop) / dropdown (mobile)
@@ -51,7 +60,8 @@ FastAPI backend for autonomous resume and portfolio generation with AI-powered c
   - AI refinement controls with conditional confirm button
   - Revert action bar for viewing older versions
 
-### Database & Persistence (NEW)
+### Database & Persistence
+
 - **SQLite** (MVP) or **PostgreSQL** (production)
 - **Async SQLAlchemy** ORM
 - **Alembic** migrations
@@ -59,14 +69,14 @@ FastAPI backend for autonomous resume and portfolio generation with AI-powered c
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 DevHeat/
 ├── app/
 │   ├── main.py                              # FastAPI app with lifecycle events
 │   ├── config.py                            # Configuration (API keys, constants)
-│   ├── database.py                          # [NEW] Database session management
+│   ├── database.py                          # Database session management
 │   ├── routers/
 │   │   ├── linkedin_router.py               # LinkedIn profile upload
 │   │   ├── resume_router.py                 # Resume upload
@@ -74,44 +84,50 @@ DevHeat/
 │   │   ├── github_router.py                 # GitHub analyzer
 │   │   ├── leetcode_router.py               # LeetCode GraphQL stats
 │   │   ├── portfolio_router.py              # Slug generation
-│   │   ├── portfolio_generation_router.py   # [NEW] Main orchestrator
-│   │   ├── portfolio_retrieval_router.py    # [NEW] GET endpoints
-│   │   └── portfolio_editing_router.py      # [NEW] PATCH/POST endpoints
+│   │   ├── portfolio_generation_router.py   # Main orchestrator
+│   │   ├── portfolio_retrieval_router.py    # GET endpoints
+│   │   └── portfolio_editing_router.py      # PATCH/POST endpoints
 │   ├── services/
 │   │   ├── github_service.py                # GitHub API logic
 │   │   ├── leetcode_service.py              # LeetCode GraphQL logic
-│   │   ├── ai_service.py                    # [NEW] Gemini API integration
-│   │   ├── code_quality_service.py          # [NEW] Heuristic analysis
-│   │   └── portfolio_builder_service.py     # [NEW] JSON construction
+│   │   ├── ai_service.py                    # Gemini API integration
+│   │   ├── code_quality_service.py          # Heuristic analysis
+│   │   └── portfolio_builder_service.py     # JSON construction
 │   ├── models/
 │   │   ├── responses.py                     # Pydantic response models
-│   │   ├── database.py                      # [NEW] SQLAlchemy ORM models
-│   │   ├── schemas.py                       # [NEW] DB Pydantic schemas
-│   │   └── portfolio_schemas.py             # [NEW] Portfolio request/response
+│   │   ├── database.py                      # SQLAlchemy ORM models
+│   │   ├── schemas.py                       # DB Pydantic schemas
+│   │   └── portfolio_schemas.py             # Portfolio request/response
 │   └── utils/
 │       ├── validators.py                    # File validation
 │       ├── file_parser.py                   # Text extraction
 │       └── slug.py                          # Slug generation
-├── alembic/                                 # [NEW] Database migrations
+├── frontend/
+│   ├── src/                                 # React source files
+│   ├── package.json                         # Frontend dependencies
+│   └── vite.config.js                       # Vite configuration
+├── alembic/                                 # Database migrations
 │   ├── versions/
 │   │   └── 001_initial_schema.py
 │   ├── env.py
 │   └── script.py.mako
 ├── .env                                     # Environment variables
-├── alembic.ini                              # [NEW] Alembic configuration
-├── requirements.txt
-├── portfolio.db                             # [NEW] SQLite database (auto-created)
+├── .gitignore                               # Git ignore patterns
+├── alembic.ini                              # Alembic configuration
+├── requirements.txt                         # Python dependencies
+├── portfolio.db                             # SQLite database (auto-created)
 └── README.md
 ```
 
 ---
 
-## 🛠️ Setup Instructions
+## Setup Instructions
 
 ### 1. Clone Repository
 
 ```bash
-cd C:\Users\dpati\DevHeat
+git clone <repository-url>
+cd DevHeat
 ```
 
 ### 2. Create Virtual Environment
@@ -130,7 +146,7 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-### 4. Install Dependencies
+### 4. Install Backend Dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -176,7 +192,7 @@ uvicorn app.main:app --reload
 
 The API will be available at: `http://localhost:8000`
 
-### 8. Run the Frontend (React)
+### 8. Install and Run Frontend
 
 ```bash
 cd frontend
@@ -195,7 +211,7 @@ The frontend will be available at: `http://localhost:3000`
 
 ---
 
-## 📚 API Endpoints
+## API Endpoints
 
 ### Health Check
 
@@ -208,7 +224,7 @@ Returns API status and available endpoints.
 
 ---
 
-## 🎨 Portfolio Generation Workflow
+## Portfolio Generation Workflow
 
 ### 1. Generate Portfolio
 
@@ -498,7 +514,7 @@ GET /portfolio/{slug}/versions/{version_id}
 
 ---
 
-## 📄 Data Extraction Endpoints (Existing)
+## Data Extraction Endpoints
 
 ### Upload LinkedIn Profile
 
@@ -633,7 +649,7 @@ GET /leetcode/{username}
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ### Install Dependencies
 
@@ -689,55 +705,69 @@ curl -X POST "http://localhost:8000/portfolio/john-doe-29fa2b/refine" \
 
 ---
 
-## 🏗️ Architecture Principles
+## Architecture Principles
 
 ### Ethical AI Usage
+
 - AI receives ONLY: metadata, README text, statistics
 - AI NEVER receives: source code, file contents (except README), code snippets
 - All inputs are sanitized in `prepare_ai_context()`
 
 ### Language-Agnostic Analysis
+
 - Code quality based on structure, not semantics
 - Works for any programming language
 - Heuristic-based scoring (complexity, documentation, best practices)
 
 ### Separation of Concerns
+
 - **Public Portfolio**: Recruiter-facing, polished content
 - **Private Coaching**: User-only, honest feedback and improvement suggestions
 
 ### Graceful Degradation
+
 - Missing data sources handled gracefully
 - External API failures don't break generation
 - AI failures fall back to template-based content
 
 ---
 
-## 🔧 Tech Stack
+## Tech Stack
 
-### Core Framework
-- **FastAPI** - Modern async web framework
-- **Uvicorn** - ASGI server
+### Backend
+
+- **FastAPI** (0.115.6) - Modern async web framework
+- **Uvicorn** (0.34.0) - ASGI server
 - **Pydantic** - Data validation and serialization
+- **SQLAlchemy** (2.0.36+) - Async ORM
+- **Alembic** (1.13.1) - Database migrations
+- **aiosqlite** (0.19.0) - Async SQLite driver
 
-### Database
-- **SQLAlchemy** - Async ORM
-- **Alembic** - Database migrations
-- **aiosqlite** - Async SQLite driver (MVP)
+### Frontend
 
-### AI & Services
-- **Google Gemini 1.5 Flash** - AI content generation (free tier)
-- **httpx** - Async HTTP client for external APIs
+- **React** (18.2.0) - UI library
+- **React Router** (6.20.0) - Client-side routing
+- **Vite** (5.0.0) - Build tool and dev server
+- **Axios** (1.6.0) - HTTP client
+
+### AI & External Services
+
+- **Google Gemini** (google-generativeai 0.7.2) - AI content generation
+- **httpx** (0.28.1) - Async HTTP client for external APIs
 
 ### File Processing
-- **pdfplumber** - PDF text extraction
-- **python-docx** - DOCX text extraction
+
+- **pdfplumber** (0.11.4) - PDF text extraction
+- **python-docx** (1.1.2) - DOCX text extraction
 
 ### Utilities
-- **python-dotenv** - Environment variable management
+
+- **python-dotenv** (1.0.1) - Environment variable management
+- **Jinja2** (3.1.3) - Template engine
 
 ---
 
-## 🚀 Deployment
+## Deployment
 
 ### Development
 
@@ -760,7 +790,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 
 ---
 
-## 📝 Database Schema
+## Database Schema
 
 ### Portfolios Table
 
@@ -790,6 +820,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 - id: UUID (PK)
 - portfolio_id: UUID (FK)
 - version_number: Integer
+- version_state: String (enum: draft, committed)
 - public_portfolio_json, private_coaching_json: JSON
 - changes_summary: Text
 - created_by: String (enum: ai, user_manual, ai_refinement)
@@ -798,9 +829,10 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 
 ---
 
-## 🐛 Error Handling
+## Error Handling
 
 ### 400 Bad Request
+
 - Invalid file type
 - File too large (>5MB)
 - Empty file
@@ -808,20 +840,23 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 - Missing required fields
 
 ### 404 Not Found
+
 - Portfolio not found
 - Version not found
 
 ### 202 Accepted
+
 - Portfolio still generating (check status endpoint)
 
 ### 500 Internal Server Error
+
 - AI generation failure (falls back to templates)
 - External API failure (continues with available data)
 - Database errors
 
 ---
 
-## 📊 Performance
+## Performance
 
 ### Free Tier Limits
 
@@ -838,20 +873,20 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 
 ---
 
-## 🎯 Hackathon Features
+## Hackathon Features
 
-✅ Ethical data usage (no scraping)
-✅ Language-agnostic code analysis
-✅ AI used strategically (not for code review)
-✅ Free-tier friendly (Gemini, GitHub, public APIs)
-✅ Deterministic demo (sample data support)
-✅ Single deployment (dynamic portfolio routes)
-✅ Version control for edits
-✅ Public/private data separation
+- Ethical data usage (no scraping)
+- Language-agnostic code analysis
+- AI used strategically (not for code review)
+- Free-tier friendly (Gemini, GitHub, public APIs)
+- Deterministic demo (sample data support)
+- Single deployment (dynamic portfolio routes)
+- Version control for edits
+- Public/private data separation
 
 ---
 
-## 🔐 Security Notes
+## Security Notes
 
 - **CORS**: Currently allows all origins (`*`) - update for production
 - **Authentication**: Not implemented for private coaching endpoint - add JWT for production
@@ -860,13 +895,13 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 
 ---
 
-## 📄 License
+## License
 
 Built for hackathon use.
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **FastAPI** - Excellent async framework
 - **Google Gemini** - Free-tier AI API
