@@ -71,19 +71,11 @@ if os.path.exists("frontend/dist"):
     @app.get("/{full_path:path}")
     async def serve_frontend(full_path: str):
         """Serve frontend for all other routes (must be last)"""
-        # Block only specific API endpoints, not all /portfolio/ paths
+        # Block API endpoints from being served as frontend
         api_prefixes = ("api/", "docs", "redoc", "openapi.json", "health", 
-                       "upload/", "github/", "codeforces/", "leetcode/")
-        
-        # Block specific portfolio API endpoints
-        portfolio_api_paths = ("portfolio/generate", "portfolio/slug")
+                       "upload/", "github/", "codeforces/", "leetcode/", "portfolio/")
         
         if full_path.startswith(api_prefixes):
-            return {"error": "Not found"}
-        
-        # Allow /portfolio/{slug} page views to reach React
-        # Only block if it's an exact API endpoint match
-        if full_path.startswith("portfolio/") and any(full_path.startswith(api) for api in portfolio_api_paths):
             return {"error": "Not found"}
         
         file_path = f"frontend/dist/{full_path}"
