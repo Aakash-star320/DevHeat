@@ -81,15 +81,8 @@ app.include_router(portfolio_refinement_router.router)  # AI-assisted refinement
 
 logger.info("FastAPI application initialized with all routers")
 
-
-@app.get("/", tags=["Health"])
-async def root():
-    """Root endpoint - API health check"""
-    return {
-        "status": "online",
-        "service": "Resume-to-Portfolio Generator API",
-        "version": "1.0.0"
-    }
+# Root endpoint removed - frontend will be served at / by the catch-all route
+# API health check is still available at /health
 
 
 @app.get("/health", tags=["Health"])
