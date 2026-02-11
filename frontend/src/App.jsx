@@ -9,7 +9,7 @@ export default function App() {
         <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/generate" element={<GeneratePortfolio />} />
-            <Route path="/portfolio/:slug" element={<ViewPortfolio />} />
+            <Route path="/view/:slug" element={<ViewPortfolio />} />
             <Route path="/refine/:slug" element={<RefinePortfolio />} />
         </Routes>
     );
