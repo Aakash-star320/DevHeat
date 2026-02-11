@@ -64,20 +64,7 @@ export default function ViewPortfolio() {
                             ? `${portfolio.personal_info.portfolio_focus.charAt(0).toUpperCase() + portfolio.personal_info.portfolio_focus.slice(1)} Developer`
                             : 'Software Developer'}
                     </p>
-                    <div className="flex gap-4 justify-center mt-6">
-                        <button
-                            onClick={() => navigate('/')}
-                            className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
-                        >
-                            Back to Home
-                        </button>
-                        <button
-                            onClick={() => navigate(`/refine/${slug}`)}
-                            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition"
-                        >
-                            Edit Portfolio
-                        </button>
-                    </div>
+
                 </div>
 
                 {/* Content */}
@@ -268,11 +255,11 @@ export default function ViewPortfolio() {
                         </section>
                     )}
 
-                    {/* GitHub Projects */}
+                    {/* Projects */}
                     {portfolio?.data_sources?.github_projects?.length > 0 && (
                         <section>
                             <h2 className="text-3xl font-bold text-white mb-4 pb-2 border-b border-gray-700">
-                                GitHub Projects
+                                Projects
                             </h2>
                             <div className="grid grid-cols-1 gap-4">
                                 {portfolio.data_sources.github_projects.map((project, idx) => (
@@ -300,26 +287,6 @@ export default function ViewPortfolio() {
                                                 View on GitHub →
                                             </a>
                                         )}
-                                        <div className="flex flex-wrap gap-4 text-sm">
-                                            {project.quality_score !== undefined && (
-                                                <span className="text-green-400">✓ Quality Score: {project.quality_score}</span>
-                                            )}
-                                            {project.structure?.files && (
-                                                <span className="text-gray-500">📁 {project.structure.files} files</span>
-                                            )}
-                                            {project.structure?.has_tests && (
-                                                <span className="text-blue-400">✓ Has Tests</span>
-                                            )}
-                                        </div>
-                                        {project.highlights && project.highlights.length > 0 && (
-                                            <div className="mt-3 flex flex-wrap gap-2">
-                                                {project.highlights.map((highlight, hIdx) => (
-                                                    <span key={hIdx} className="px-2 py-1 bg-blue-600/10 border border-blue-500/30 rounded text-blue-300 text-xs">
-                                                        {highlight}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -343,6 +310,14 @@ export default function ViewPortfolio() {
                                             <p><span className="text-gray-400">Rank:</span> <span className="capitalize">{portfolio.data_sources.competitive_programming.codeforces.rank}</span></p>
                                             <p><span className="text-gray-400">Contests:</span> {portfolio.data_sources.competitive_programming.codeforces.contest_count}</p>
                                             <p><span className="text-gray-400">Problems Solved:</span> {portfolio.data_sources.competitive_programming.codeforces.problems_solved}</p>
+                                            <a
+                                                href={`https://codeforces.com/profile/${portfolio.data_sources.competitive_programming.codeforces.username}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-orange-400 hover:text-orange-300 inline-block mt-2"
+                                            >
+                                                View Profile →
+                                            </a>
                                         </div>
                                     </div>
                                 )}
@@ -445,8 +420,6 @@ export default function ViewPortfolio() {
 
                 {/* Footer */}
                 <div className="text-center mt-12 text-gray-500">
-                    <p>Generated with AI-Powered Portfolio Generator</p>
-                    <p className="text-sm mt-2">Portfolio Slug: {slug}</p>
                 </div>
             </div>
         </div>

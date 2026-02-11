@@ -7,22 +7,7 @@ export default function Navbar() {
     const navigate = useNavigate();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const navlinks = [
-        {
-            href: "#creations",
-            text: "Features",
-        },
-        {
-            href: "#about",
-            text: "About",
-        },
-        {
-            href: "#testimonials",
-            text: "Testimonials",
-        },
-        {
-            href: "#contact",
-            text: "Contact",
-        },
+
     ];
     return (
         <>
@@ -51,12 +36,7 @@ export default function Navbar() {
                     >
                         Generate Portfolio
                     </button>
-                    <button
-                        onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-                        className="hover:bg-slate-300/20 transition px-6 py-2 border border-slate-400 rounded-md active:scale-95"
-                    >
-                        Contact Us
-                    </button>
+
                 </div>
                 <button onClick={() => setIsMenuOpen(true)} className="lg:hidden active:scale-90 transition">
                     <MenuIcon className="size-6.5" />

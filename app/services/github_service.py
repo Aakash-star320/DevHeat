@@ -275,6 +275,7 @@ async def analyze_repository(repo_url: str) -> GitHubRepoAnalysis:
             description=description,
             primary_language=primary_language,
             last_updated=last_updated,
+            github_url=f"https://github.com/{owner}/{repo}",
             readme_text=readme_text,
             readme_length=readme_length,
             structure=structure

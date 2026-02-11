@@ -59,26 +59,10 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 # Mount frontend build (for production)
 # The frontend build will be in frontend/dist after running npm run build
 import os
+from fastapi.responses import FileResponse
+
 if os.path.exists("frontend/dist"):
     app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="frontend-assets")
-    from fastapi.responses import FileResponse
-    
-    @app.get("/refine/{slug}")
-    async def serve_refine_page(slug: str):
-        """Serve the refinement UI"""
-        return FileResponse("frontend/dist/index.html")
-    
-    @app.get("/{full_path:path}")
-    async def serve_frontend(full_path: str):
-        """Serve frontend for all other routes (must be last)"""
-        # Don't serve frontend for API routes
-        if full_path.startswith(("api/", "docs", "redoc", "openapi.json", "health", "upload/", "github/", "codeforces/", "leetcode/", "portfolio/")):
-            return {"error": "Not found"}
-        
-        file_path = f"frontend/dist/{full_path}"
-        if os.path.exists(file_path) and os.path.isfile(file_path):
-            return FileResponse(file_path)
-        return FileResponse("frontend/dist/index.html")
 
 # Register routers
 # Data extraction endpoints
@@ -97,15 +81,8 @@ app.include_router(portfolio_refinement_router.router)  # AI-assisted refinement
 
 logger.info("FastAPI application initialized with all routers")
 
-
-@app.get("/", tags=["Health"])
-async def root():
-    """Root endpoint - API health check"""
-    return {
-        "status": "online",
-        "service": "Resume-to-Portfolio Generator API",
-        "version": "1.0.0"
-    }
+# Root endpoint removed - frontend will be served at / by the catch-all route
+# API health check is still available at /health
 
 
 @app.get("/health", tags=["Health"])
@@ -144,3 +121,31 @@ async def health_check():
             "Private coaching insights"
         ]
     }
+
+
+# Frontend routes (MUST be last - after all API routers)
+if os.path.exists("frontend/dist"):
+    @app.get("/refine/{slug}")
+    async def serve_refine_page(slug: str):
+        """Serve the refinement UI"""
+        return FileResponse("frontend/dist/index.html")
+    
+    @app.get("/view/{slug}")
+    async def serve_portfolio_view(slug: str):
+        """Serve the public portfolio view UI"""
+        return FileResponse("frontend/dist/index.html")
+    
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        """Serve frontend for all other routes (must be last)"""
+        # Block API endpoints from being served as frontend
+        api_prefixes = ("api/", "docs", "redoc", "openapi.json", "health", 
+                       "upload/", "github/", "codeforces/", "leetcode/")
+        
+        if full_path.startswith(api_prefixes):
+            return {"error": "Not found"}
+        
+        file_path = f"frontend/dist/{full_path}"
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse("frontend/dist/index.html")
