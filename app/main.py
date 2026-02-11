@@ -130,6 +130,11 @@ if os.path.exists("frontend/dist"):
         """Serve the refinement UI"""
         return FileResponse("frontend/dist/index.html")
     
+    @app.get("/view/{slug}")
+    async def serve_portfolio_view(slug: str):
+        """Serve the public portfolio view UI"""
+        return FileResponse("frontend/dist/index.html")
+    
     @app.get("/{full_path:path}")
     async def serve_frontend(full_path: str):
         """Serve frontend for all other routes (must be last)"""
