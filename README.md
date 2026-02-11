@@ -36,9 +36,11 @@ A full-stack application that generates professional portfolios by aggregating d
 - **Confirm/Revert Workflow** - Review changes before committing
 - **Version History** - Complete audit trail of all modifications
 
-### Private Coaching Insights
-- **Personalized Feedback** - Strengths, areas for improvement, and recommendations
-- **Career Guidance** - Next steps and skill development paths
+### Personalized Insights
+- **AI-Powered Feedback** - Skill analysis, learning paths, and career guidance
+- **Interview Preparation** - Likely questions and key talking points
+- **Market Positioning** - Target roles, competitive advantages, and resume improvements
+- **Auto-Loading** - Insights load automatically, no manual action required
 - **Beautiful UI** - Color-coded sections with intuitive navigation
 
 ### Modern Frontend
@@ -286,14 +288,13 @@ Frontend will be available at: **http://localhost:5173** (or the port Vite assig
 
 ### 3. Refine Portfolio
 - View your AI-generated portfolio content
-- Switch to "Private Coaching" tab to see personalized insights:
-  - Overall Assessment
-  - Strengths
-  - Areas for Improvement
-  - Recommendations
-  - Next Steps
+- Switch to "Personalized Insights" tab to see AI-powered feedback:
+  - Skill Analysis (Strengths & Gaps)
+  - Learning Path (Immediate, Short-term, Long-term goals)
+  - Interview Preparation (Questions & Talking Points)
+  - Market Positioning (Target Roles & Competitive Advantages)
 - Use AI refinement to improve specific sections
-- Review and confirm changes
+- Confirm current version to save changes
 - View version history and revert if needed
 
 ### 4. View Public Portfolio
@@ -431,38 +432,48 @@ Returns complete public portfolio JSON.
 
 ---
 
-#### Get Coaching Insights
+#### Get Personalized Insights
 
 ```bash
 GET /portfolio/{slug}/coaching
 ```
 
-Returns private coaching insights with personalized recommendations.
+Returns personalized insights with AI-powered career guidance.
 
 **Response Structure:**
 
 ```json
 {
-  "overall_assessment": "Comprehensive assessment text...",
-  "strengths": [
-    "Strong full-stack development experience",
-    "Excellent problem-solving skills"
-  ],
-  "areas_for_improvement": [
-    {
-      "area": "System Design",
-      "suggestion": "Consider studying distributed systems..."
-    }
-  ],
-  "recommendations": [
-    "Build a microservices project",
-    "Contribute to open-source projects"
-  ],
-  "next_steps": [
-    "Complete system design course",
-    "Practice LeetCode medium problems",
-    "Build portfolio website"
-  ]
+  "skill_analysis": {
+    "strengths": [
+      "Strong full-stack development experience",
+      "Excellent problem-solving skills"
+    ],
+    "gaps": [
+      "Limited experience with distributed systems",
+      "Could improve system design knowledge"
+    ]
+  },
+  "learning_path": {
+    "immediate": ["Complete Docker tutorial", "Practice SQL optimization"],
+    "short_term": ["Build microservices project", "Study system design"],
+    "long_term": ["Master cloud architecture", "Lead technical projects"]
+  },
+  "interview_prep": {
+    "likely_questions": [
+      "Explain your approach to building scalable systems",
+      "Describe a challenging bug you solved"
+    ],
+    "talking_points": [
+      "Highlight full-stack project experience",
+      "Emphasize problem-solving methodology"
+    ]
+  },
+  "market_positioning": {
+    "target_roles": ["Senior Full-Stack Engineer", "Backend Engineer"],
+    "competitive_advantages": ["Strong algorithmic skills", "Full-stack expertise"],
+    "resume_improvements": ["Quantify project impact", "Add system design projects"]
+  }
 }
 ```
 
@@ -661,21 +672,20 @@ Returns problem-solving statistics via GraphQL.
   - And more!
 
 ### 3. Refine Portfolio (`/refine/:slug`)
-- Two-tab interface: Portfolio | Private Coaching
+- Two-tab interface: Portfolio | Personalized Insights
 - Portfolio tab:
   - Professional summary
   - Key strengths
   - Project highlights
   - Skills
-- Private Coaching tab:
-  - Overall Assessment (Indigo)
-  - Strengths (Green)
-  - Areas for Improvement (Yellow)
-  - Recommendations (Blue)
-  - Next Steps (Purple)
+- Personalized Insights tab (auto-loads):
+  - Skill Analysis - Strengths (Green) & Gaps (Yellow)
+  - Learning Path (Blue) - Immediate, Short-term, Long-term
+  - Interview Prep (Purple) - Questions & Talking Points
+  - Market Positioning (Indigo) - Roles & Advantages
 - AI refinement controls
-- Version management
-- Confirm/revert actions
+- Version management (clean UI without internal states)
+- Confirm current version / Revert actions
 
 ### 4. View Portfolio (`/portfolio/:slug`)
 - Beautiful public portfolio display

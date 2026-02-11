@@ -19,6 +19,7 @@ export default function RefinePortfolio() {
     useEffect(() => {
         loadPortfolio();
         loadVersions();
+        loadCoachingInsights(); // Auto-load coaching insights
     }, [slug]);
 
     const loadPortfolio = async () => {
@@ -168,23 +169,21 @@ export default function RefinePortfolio() {
                         <div className="flex gap-4 mb-6 border-b border-gray-700">
                             <button
                                 onClick={() => setActiveTab('portfolio')}
-                                className={`pb-3 px-4 transition ${
-                                    activeTab === 'portfolio'
-                                        ? 'text-blue-500 border-b-2 border-blue-500'
-                                        : 'text-gray-400 hover:text-white'
-                                }`}
+                                className={`pb-3 px-4 transition ${activeTab === 'portfolio'
+                                    ? 'text-blue-500 border-b-2 border-blue-500'
+                                    : 'text-gray-400 hover:text-white'
+                                    }`}
                             >
                                 Portfolio
                             </button>
                             <button
                                 onClick={() => setActiveTab('coaching')}
-                                className={`pb-3 px-4 transition ${
-                                    activeTab === 'coaching'
-                                        ? 'text-blue-500 border-b-2 border-blue-500'
-                                        : 'text-gray-400 hover:text-white'
-                                }`}
+                                className={`pb-3 px-4 transition ${activeTab === 'coaching'
+                                    ? 'text-blue-500 border-b-2 border-blue-500'
+                                    : 'text-gray-400 hover:text-white'
+                                    }`}
                             >
-                                Private Coaching
+                                Personalized Insights
                             </button>
                         </div>
 
@@ -256,101 +255,193 @@ export default function RefinePortfolio() {
                                     {!coachingData ? (
                                         <div className="text-center py-8">
                                             <p className="text-gray-400 mb-6">
-                                                Get personalized coaching insights based on your portfolio
+                                                Get personalized insights based on your portfolio
                                             </p>
                                             <button
                                                 onClick={loadCoachingInsights}
                                                 disabled={loadingCoaching}
                                                 className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition disabled:opacity-50"
                                             >
-                                                {loadingCoaching ? 'Loading...' : 'Load Coaching Insights'}
+                                                {loadingCoaching ? 'Loading...' : 'Load Personalized Insights'}
                                             </button>
                                         </div>
                                     ) : (
                                         <div className="space-y-6">
-                                            {/* Overall Assessment */}
-                                            {coachingData.overall_assessment && (
-                                                <div className="bg-indigo-900/20 border border-indigo-500/30 rounded-xl p-6">
-                                                    <h3 className="text-xl font-semibold text-white mb-3 flex items-center">
-                                                        <span className="mr-2">📊</span>
-                                                        Overall Assessment
-                                                    </h3>
-                                                    <p className="text-gray-300 leading-relaxed">{coachingData.overall_assessment}</p>
+                                            {/* Skill Analysis */}
+                                            {coachingData.skill_analysis && (
+                                                <div>
+                                                    {coachingData.skill_analysis.strengths?.length > 0 && (
+                                                        <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-6 mb-6">
+                                                            <h3 className="text-xl font-semibold text-white mb-3 flex items-center">
+                                                                <span className="mr-2">💪</span>
+                                                                Your Strengths
+                                                            </h3>
+                                                            <ul className="space-y-2">
+                                                                {coachingData.skill_analysis.strengths.map((strength, idx) => (
+                                                                    <li key={idx} className="text-gray-300 flex items-start">
+                                                                        <span className="text-green-400 mr-2">✓</span>
+                                                                        {strength}
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
+
+                                                    {coachingData.skill_analysis.gaps?.length > 0 && (
+                                                        <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-6">
+                                                            <h3 className="text-xl font-semibold text-white mb-3 flex items-center">
+                                                                <span className="mr-2">🎯</span>
+                                                                Skill Gaps to Address
+                                                            </h3>
+                                                            <ul className="space-y-2">
+                                                                {coachingData.skill_analysis.gaps.map((gap, idx) => (
+                                                                    <li key={idx} className="text-gray-300 flex items-start">
+                                                                        <span className="text-yellow-400 mr-2">•</span>
+                                                                        {gap}
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
 
-                                            {/* Strengths */}
-                                            {coachingData.strengths?.length > 0 && (
-                                                <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-6">
-                                                    <h3 className="text-xl font-semibold text-white mb-3 flex items-center">
-                                                        <span className="mr-2">💪</span>
-                                                        Strengths
-                                                    </h3>
-                                                    <ul className="space-y-2">
-                                                        {coachingData.strengths.map((strength, idx) => (
-                                                            <li key={idx} className="text-gray-300 flex items-start">
-                                                                <span className="text-green-400 mr-2">✓</span>
-                                                                {strength}
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            )}
-
-                                            {/* Areas for Improvement */}
-                                            {coachingData.areas_for_improvement?.length > 0 && (
-                                                <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-6">
-                                                    <h3 className="text-xl font-semibold text-white mb-3 flex items-center">
-                                                        <span className="mr-2">🎯</span>
-                                                        Areas for Improvement
-                                                    </h3>
-                                                    <ul className="space-y-3">
-                                                        {coachingData.areas_for_improvement.map((area, idx) => (
-                                                            <li key={idx} className="text-gray-300">
-                                                                <div className="flex items-start mb-2">
-                                                                    <span className="text-yellow-400 mr-2">•</span>
-                                                                    <strong className="text-white">{area.area}</strong>
-                                                                </div>
-                                                                <p className="ml-6 text-sm text-gray-400">{area.suggestion}</p>
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            )}
-
-                                            {/* Recommendations */}
-                                            {coachingData.recommendations?.length > 0 && (
+                                            {/* Learning Path */}
+                                            {coachingData.learning_path && (
                                                 <div className="bg-blue-900/20 border border-blue-500/30 rounded-xl p-6">
-                                                    <h3 className="text-xl font-semibold text-white mb-3 flex items-center">
-                                                        <span className="mr-2">💡</span>
-                                                        Recommendations
+                                                    <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                                                        <span className="mr-2">📚</span>
+                                                        Learning Path
                                                     </h3>
-                                                    <ul className="space-y-2">
-                                                        {coachingData.recommendations.map((rec, idx) => (
-                                                            <li key={idx} className="text-gray-300 flex items-start">
-                                                                <span className="text-blue-400 mr-2">→</span>
-                                                                {rec}
-                                                            </li>
-                                                        ))}
-                                                    </ul>
+                                                    <div className="space-y-4">
+                                                        {coachingData.learning_path.immediate?.length > 0 && (
+                                                            <div>
+                                                                <h4 className="text-white font-medium mb-2">Immediate Actions</h4>
+                                                                <ul className="space-y-1">
+                                                                    {coachingData.learning_path.immediate.map((step, idx) => (
+                                                                        <li key={idx} className="text-gray-300 text-sm flex items-start">
+                                                                            <span className="text-blue-400 mr-2">→</span>
+                                                                            {step}
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        )}
+                                                        {coachingData.learning_path.short_term?.length > 0 && (
+                                                            <div>
+                                                                <h4 className="text-white font-medium mb-2">3-6 Month Goals</h4>
+                                                                <ul className="space-y-1">
+                                                                    {coachingData.learning_path.short_term.map((step, idx) => (
+                                                                        <li key={idx} className="text-gray-300 text-sm flex items-start">
+                                                                            <span className="text-blue-400 mr-2">→</span>
+                                                                            {step}
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        )}
+                                                        {coachingData.learning_path.long_term?.length > 0 && (
+                                                            <div>
+                                                                <h4 className="text-white font-medium mb-2">Long-term Career Goals</h4>
+                                                                <ul className="space-y-1">
+                                                                    {coachingData.learning_path.long_term.map((step, idx) => (
+                                                                        <li key={idx} className="text-gray-300 text-sm flex items-start">
+                                                                            <span className="text-blue-400 mr-2">→</span>
+                                                                            {step}
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             )}
 
-                                            {/* Next Steps */}
-                                            {coachingData.next_steps?.length > 0 && (
+                                            {/* Interview Prep */}
+                                            {coachingData.interview_prep && (
                                                 <div className="bg-purple-900/20 border border-purple-500/30 rounded-xl p-6">
-                                                    <h3 className="text-xl font-semibold text-white mb-3 flex items-center">
-                                                        <span className="mr-2">🚀</span>
-                                                        Next Steps
+                                                    <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                                                        <span className="mr-2">💼</span>
+                                                        Interview Preparation
                                                     </h3>
-                                                    <ol className="space-y-2">
-                                                        {coachingData.next_steps.map((step, idx) => (
-                                                            <li key={idx} className="text-gray-300 flex items-start">
-                                                                <span className="text-purple-400 mr-3 font-semibold">{idx + 1}.</span>
-                                                                {step}
-                                                            </li>
-                                                        ))}
-                                                    </ol>
+                                                    <div className="space-y-4">
+                                                        {coachingData.interview_prep.likely_questions?.length > 0 && (
+                                                            <div>
+                                                                <h4 className="text-white font-medium mb-2">Likely Questions</h4>
+                                                                <ul className="space-y-2">
+                                                                    {coachingData.interview_prep.likely_questions.map((q, idx) => (
+                                                                        <li key={idx} className="text-gray-300 text-sm flex items-start">
+                                                                            <span className="text-purple-400 mr-2">Q{idx + 1}:</span>
+                                                                            {q}
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        )}
+                                                        {coachingData.interview_prep.talking_points?.length > 0 && (
+                                                            <div>
+                                                                <h4 className="text-white font-medium mb-2">Key Talking Points</h4>
+                                                                <ul className="space-y-1">
+                                                                    {coachingData.interview_prep.talking_points.map((point, idx) => (
+                                                                        <li key={idx} className="text-gray-300 text-sm flex items-start">
+                                                                            <span className="text-purple-400 mr-2">•</span>
+                                                                            {point}
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Market Positioning */}
+                                            {coachingData.market_positioning && (
+                                                <div className="bg-indigo-900/20 border border-indigo-500/30 rounded-xl p-6">
+                                                    <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                                                        <span className="mr-2">🎯</span>
+                                                        Market Positioning
+                                                    </h3>
+                                                    <div className="space-y-4">
+                                                        {coachingData.market_positioning.target_roles?.length > 0 && (
+                                                            <div>
+                                                                <h4 className="text-white font-medium mb-2">Target Roles</h4>
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {coachingData.market_positioning.target_roles.map((role, idx) => (
+                                                                        <span key={idx} className="px-3 py-1 bg-indigo-600/20 border border-indigo-500/50 rounded-full text-indigo-300 text-sm">
+                                                                            {role}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                        {coachingData.market_positioning.competitive_advantages?.length > 0 && (
+                                                            <div>
+                                                                <h4 className="text-white font-medium mb-2">Your Competitive Advantages</h4>
+                                                                <ul className="space-y-1">
+                                                                    {coachingData.market_positioning.competitive_advantages.map((adv, idx) => (
+                                                                        <li key={idx} className="text-gray-300 text-sm flex items-start">
+                                                                            <span className="text-indigo-400 mr-2">✓</span>
+                                                                            {adv}
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        )}
+                                                        {coachingData.market_positioning.resume_improvements?.length > 0 && (
+                                                            <div>
+                                                                <h4 className="text-white font-medium mb-2">Resume Improvements</h4>
+                                                                <ul className="space-y-1">
+                                                                    {coachingData.market_positioning.resume_improvements.map((imp, idx) => (
+                                                                        <li key={idx} className="text-gray-300 text-sm flex items-start">
+                                                                            <span className="text-indigo-400 mr-2">→</span>
+                                                                            {imp}
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             )}
 
@@ -359,7 +450,7 @@ export default function RefinePortfolio() {
                                                 disabled={loadingCoaching}
                                                 className="w-full py-3 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 rounded-lg transition disabled:opacity-50 border border-purple-500/50"
                                             >
-                                                {loadingCoaching ? 'Refreshing...' : 'Refresh Coaching Insights'}
+                                                {loadingCoaching ? 'Refreshing...' : 'Refresh Insights'}
                                             </button>
                                         </div>
                                     )}
@@ -393,7 +484,7 @@ export default function RefinePortfolio() {
                                     onClick={handleConfirm}
                                     className="w-full mt-3 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition"
                                 >
-                                    Confirm Draft Version
+                                    Confirm Current Version
                                 </button>
                             )}
                         </div>
@@ -413,15 +504,6 @@ export default function RefinePortfolio() {
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="text-white font-medium">
                                                     Version {version.version_number}
-                                                </span>
-                                                <span
-                                                    className={`px-3 py-1 rounded-full text-xs ${
-                                                        version.version_state === 'draft'
-                                                            ? 'bg-yellow-600/20 text-yellow-400 border border-yellow-500/50'
-                                                            : 'bg-green-600/20 text-green-400 border border-green-500/50'
-                                                    }`}
-                                                >
-                                                    {version.version_state === 'draft' ? 'Draft' : 'Committed'}
                                                 </span>
                                             </div>
                                             <p className="text-gray-400 text-sm mb-3">
