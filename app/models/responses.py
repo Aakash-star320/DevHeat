@@ -42,7 +42,7 @@ class ResumeResponse(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "resume_text": "John Doe\nSoftware Engineer\n\nExperience:\n..."
+                "resume_text": "Marcus Johnson\nSoftware Engineer\n\nExperience:\n..."
             }
         }
 
@@ -269,7 +269,7 @@ class PortfolioRequest(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "name": "John Doe"
+                "name": "Marcus Johnson"
             }
         }
 
@@ -283,7 +283,7 @@ class PortfolioResponse(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "portfolio_url": "/portfolio/john-doe-29fa2b"
+                "portfolio_url": "/portfolio/marcus-johnson-29fa2b"
             }
         }
 

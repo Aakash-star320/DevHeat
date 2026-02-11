@@ -355,13 +355,13 @@ POST /portfolio/generate
 
 ```bash
 curl -X POST "http://localhost:8000/portfolio/generate" \
-  -F "name=John Doe" \
+  -F "name=Alex Rivera" \
   -F "portfolio_focus=fullstack" \
   -F "linkedin_file=@linkedin.pdf" \
   -F "resume_file=@resume.pdf" \
   -F 'github_repos=["https://github.com/user/repo1"]' \
   -F "codeforces_username=tourist" \
-  -F "leetcode_username=johndoe"
+  -F "leetcode_username=arivera"
 ```
 
 **Response:**
@@ -369,10 +369,10 @@ curl -X POST "http://localhost:8000/portfolio/generate" \
 ```json
 {
   "portfolio_id": "550e8400-e29b-41d4-a716-446655440000",
-  "slug": "john-doe-29fa2b",
+  "slug": "alex-rivera-29fa2b",
   "status": "completed",
-  "public_portfolio_url": "/portfolio/john-doe-29fa2b",
-  "private_coaching_url": "/portfolio/john-doe-29fa2b/coaching",
+  "public_portfolio_url": "/portfolio/alex-rivera-29fa2b",
+  "private_coaching_url": "/portfolio/alex-rivera-29fa2b/coaching",
   "generation_time_seconds": 12.5
 }
 ```
@@ -392,8 +392,8 @@ Returns complete public portfolio JSON.
 ```json
 {
   "personal_info": {
-    "name": "John Doe",
-    "slug": "john-doe-29fa2b",
+    "name": "Alex Rivera",
+    "slug": "alex-rivera-29fa2b",
     "portfolio_focus": "fullstack"
   },
   "ai_generated_content": {

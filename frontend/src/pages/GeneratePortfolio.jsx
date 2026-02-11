@@ -205,7 +205,7 @@ export default function GeneratePortfolio() {
                                             onChange={handleInputChange}
                                             required
                                             className="w-full px-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition"
-                                            placeholder="John Doe"
+                                            placeholder="Sarah Chen"
                                         />
                                     </div>
 
@@ -316,7 +316,7 @@ export default function GeneratePortfolio() {
                                             value={formData.leetcode_username}
                                             onChange={handleInputChange}
                                             className="w-full px-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition"
-                                            placeholder="johndoe"
+                                            placeholder="schen"
                                         />
                                         <p className="text-slate-500 text-sm mt-2">Optional: Your LeetCode username</p>
                                     </div>
