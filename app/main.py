@@ -73,7 +73,7 @@ if os.path.exists("frontend/dist"):
         """Serve frontend for all other routes (must be last)"""
         # Block API endpoints from being served as frontend
         api_prefixes = ("api/", "docs", "redoc", "openapi.json", "health", 
-                       "upload/", "github/", "codeforces/", "leetcode/", "portfolio/")
+                       "upload/", "github/", "codeforces/", "leetcode/")
         
         if full_path.startswith(api_prefixes):
             return {"error": "Not found"}
