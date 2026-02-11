@@ -167,6 +167,7 @@ class GitHubRepoAnalysis(BaseModel):
     description: str = Field(description="Repository description")
     primary_language: str = Field(description="Primary programming language")
     last_updated: str = Field(description="Last update timestamp")
+    github_url: str = Field(description="Full GitHub repository URL")
     readme_text: str = Field(description="README content (truncated to 10k chars)")
     readme_length: int = Field(description="README character count")
     structure: RepositoryStructure = Field(description="Repository structure analysis")

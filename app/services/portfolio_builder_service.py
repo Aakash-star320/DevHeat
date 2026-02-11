@@ -106,7 +106,7 @@ def _build_data_sources_section(
                 "name": repo.get("name", ""),
                 "description": repo.get("description", ""),
                 "language": repo.get("primary_language", ""),
-                "github_url": f"https://github.com/{repo.get('name', '')}",  # Simplified
+                "github_url": repo.get("github_url", ""),
                 "structure": {
                     "files": repo.get("structure", {}).get("files", 0),
                     "has_tests": repo.get("structure", {}).get("has_tests", False)

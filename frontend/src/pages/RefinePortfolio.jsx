@@ -438,7 +438,7 @@ export default function RefinePortfolio() {
                                                         <div className="text-center p-3 bg-gray-900/50 rounded-lg">
                                                             <span className="text-xl mb-1 block">📧</span>
                                                             <span className="text-gray-400 text-xs block mb-1">Email</span>
-                                                            <span className="text-blue-400 text-sm">{portfolio.ai_generated_content.contact_info.email}</span>
+                                                            <span className="text-blue-400 text-sm break-all">{portfolio.ai_generated_content.contact_info.email}</span>
                                                         </div>
                                                     )}
                                                     {portfolio.ai_generated_content.contact_info.linkedin && (
