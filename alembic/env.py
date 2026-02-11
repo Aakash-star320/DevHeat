@@ -1,12 +1,22 @@
 """Alembic environment configuration for async SQLAlchemy"""
 import asyncio
+import os
+import sys
 from logging.config import fileConfig
 
+from dotenv import load_dotenv
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Fix for Windows: psycopg requires WindowsSelectorEventLoopPolicy on Windows
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 # Import your models' Base for autogenerate support
 from app.database import Base
@@ -15,6 +25,11 @@ from app.models.database import Portfolio, PortfolioVersion  # noqa
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Override the sqlalchemy.url with DATABASE_URL from environment
+database_url = os.getenv("DATABASE_URL")
+if database_url:
+    config.set_main_option("sqlalchemy.url", database_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
