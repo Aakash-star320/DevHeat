@@ -194,7 +194,7 @@ export default function RefinePortfolio() {
                                     {/* Professional Summary */}
                                     {portfolio?.ai_generated_content?.professional_summary && (
                                         <div>
-                                            <h2 className="text-2xl font-bold text-white mb-3">Professional Summary</h2>
+                                            <h2 className="text-2xl font-bold text-white mb-3">About Me</h2>
                                             <p className="text-gray-300 leading-relaxed">
                                                 {portfolio.ai_generated_content.professional_summary}
                                             </p>
@@ -219,7 +219,7 @@ export default function RefinePortfolio() {
                                     {/* Project Highlights */}
                                     {portfolio?.ai_generated_content?.project_highlights?.length > 0 && (
                                         <div>
-                                            <h2 className="text-2xl font-bold text-white mb-3">Project Highlights</h2>
+                                            <h2 className="text-2xl font-bold text-white mb-3">Featured Projects</h2>
                                             <div className="space-y-4">
                                                 {portfolio.ai_generated_content.project_highlights.map((project, idx) => (
                                                     <div key={idx} className="bg-gray-900/50 p-4 rounded-lg">
@@ -236,7 +236,7 @@ export default function RefinePortfolio() {
                                     {/* Skills */}
                                     {portfolio?.ai_generated_content?.skills?.length > 0 && (
                                         <div>
-                                            <h2 className="text-2xl font-bold text-white mb-3">Skills</h2>
+                                            <h2 className="text-2xl font-bold text-white mb-3">Technical Skills</h2>
                                             <div className="flex flex-wrap gap-2">
                                                 {portfolio.ai_generated_content.skills.map((skill, idx) => (
                                                     <span
@@ -246,6 +246,216 @@ export default function RefinePortfolio() {
                                                         {skill}
                                                     </span>
                                                 ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Work Experience */}
+                                    {portfolio?.ai_generated_content?.work_experience?.length > 0 && (
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-white mb-3">Work Experience</h2>
+                                            <div className="space-y-4">
+                                                {portfolio.ai_generated_content.work_experience.map((exp, idx) => (
+                                                    <div key={idx} className="bg-gray-900/50 p-4 rounded-lg">
+                                                        <div className="flex justify-between items-start mb-2">
+                                                            <div>
+                                                                <h3 className="text-lg font-semibold text-white">{exp.title}</h3>
+                                                                <p className="text-blue-400">{exp.company}</p>
+                                                            </div>
+                                                            <span className="text-gray-400 text-sm">{exp.duration}</span>
+                                                        </div>
+                                                        {exp.description_bullets && (
+                                                            <ul className="space-y-1 mt-2">
+                                                                {exp.description_bullets.map((bullet, bIdx) => (
+                                                                    <li key={bIdx} className="flex items-start text-gray-300 text-sm">
+                                                                        <span className="text-blue-500 mr-2">•</span>
+                                                                        {bullet}
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Achievements */}
+                                    {portfolio?.ai_generated_content?.achievements?.length > 0 && (
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-white mb-3">Achievements</h2>
+                                            <ul className="space-y-2">
+                                                {portfolio.ai_generated_content.achievements.map((achievement, idx) => (
+                                                    <li key={idx} className="flex items-start bg-gray-900/50 p-3 rounded-lg">
+                                                        <span className="text-yellow-500 mr-2">🏆</span>
+                                                        <span className="text-gray-300">{achievement}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {/* Skills & Technologies */}
+                                    {portfolio?.ai_generated_content?.skills_summary && (
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-white mb-3">Skills & Technologies</h2>
+                                            <div className="space-y-4">
+                                                {portfolio.ai_generated_content.skills_summary.languages && (
+                                                    <div>
+                                                        <h3 className="text-lg font-semibold text-white mb-2">Languages</h3>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {portfolio.ai_generated_content.skills_summary.languages.map((lang, idx) => (
+                                                                <span key={idx} className="px-3 py-1 bg-blue-600/20 border border-blue-500/50 rounded-lg text-blue-300 text-sm">
+                                                                    {lang}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {portfolio.ai_generated_content.skills_summary.frameworks && (
+                                                    <div>
+                                                        <h3 className="text-lg font-semibold text-white mb-2">Frameworks & Libraries</h3>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {portfolio.ai_generated_content.skills_summary.frameworks.map((framework, idx) => (
+                                                                <span key={idx} className="px-3 py-1 bg-purple-600/20 border border-purple-500/50 rounded-lg text-purple-300 text-sm">
+                                                                    {framework}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {portfolio.ai_generated_content.skills_summary.tools && (
+                                                    <div>
+                                                        <h3 className="text-lg font-semibold text-white mb-2">Tools & Technologies</h3>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {portfolio.ai_generated_content.skills_summary.tools.map((tool, idx) => (
+                                                                <span key={idx} className="px-3 py-1 bg-green-600/20 border border-green-500/50 rounded-lg text-green-300 text-sm">
+                                                                    {tool}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Projects (GitHub) */}
+                                    {portfolio?.data_sources?.github_projects?.length > 0 && (
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-white mb-3">Projects</h2>
+                                            <div className="space-y-3">
+                                                {portfolio.data_sources.github_projects.map((project, idx) => (
+                                                    <div key={idx} className="bg-gray-900/50 p-4 rounded-lg">
+                                                        <div className="flex items-start justify-between mb-2">
+                                                            <h3 className="text-lg font-semibold text-white">{project.name}</h3>
+                                                            {project.language && (
+                                                                <span className="px-2 py-1 bg-purple-600/20 border border-purple-500/50 rounded-full text-purple-300 text-xs">
+                                                                    {project.language}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {project.description && project.description.trim() && (
+                                                            <p className="text-gray-400 text-sm mb-2">{project.description}</p>
+                                                        )}
+                                                        {project.github_url && (
+                                                            <a
+                                                                href={project.github_url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-blue-400 hover:text-blue-300 text-xs"
+                                                            >
+                                                                View on GitHub →
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Competitive Programming */}
+                                    {portfolio?.data_sources?.competitive_programming && (
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-white mb-3">Competitive Programming</h2>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {portfolio.data_sources.competitive_programming.codeforces && (
+                                                    <div className="bg-gradient-to-br from-orange-900/20 to-orange-800/20 p-4 rounded-lg border border-orange-500/30">
+                                                        <h3 className="text-lg font-semibold text-white mb-2">Codeforces</h3>
+                                                        <div className="space-y-1 text-sm text-gray-300">
+                                                            <p><span className="text-gray-400">Username:</span> {portfolio.data_sources.competitive_programming.codeforces.username}</p>
+                                                            <p><span className="text-gray-400">Rating:</span> <span className="text-orange-400 font-bold">{portfolio.data_sources.competitive_programming.codeforces.current_rating}</span></p>
+                                                            <p><span className="text-gray-400">Max Rating:</span> {portfolio.data_sources.competitive_programming.codeforces.max_rating}</p>
+                                                            <p><span className="text-gray-400">Rank:</span> <span className="capitalize">{portfolio.data_sources.competitive_programming.codeforces.rank}</span></p>
+                                                            <p><span className="text-gray-400">Problems Solved:</span> {portfolio.data_sources.competitive_programming.codeforces.problems_solved}</p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {portfolio.data_sources.competitive_programming.leetcode && (
+                                                    <div className="bg-gradient-to-br from-yellow-900/20 to-yellow-800/20 p-4 rounded-lg border border-yellow-500/30">
+                                                        <h3 className="text-lg font-semibold text-white mb-2">LeetCode</h3>
+                                                        <div className="space-y-1 text-sm text-gray-300">
+                                                            <p><span className="text-gray-400">Username:</span> {portfolio.data_sources.competitive_programming.leetcode.username}</p>
+                                                            <p><span className="text-gray-400">Total Solved:</span> <span className="text-yellow-400 font-bold">{portfolio.data_sources.competitive_programming.leetcode.total_solved}</span></p>
+                                                            <p><span className="text-gray-400">Easy:</span> {portfolio.data_sources.competitive_programming.leetcode.breakdown.easy}</p>
+                                                            <p><span className="text-gray-400">Medium:</span> {portfolio.data_sources.competitive_programming.leetcode.breakdown.medium}</p>
+                                                            <p><span className="text-gray-400">Hard:</span> {portfolio.data_sources.competitive_programming.leetcode.breakdown.hard}</p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Code Quality */}
+                                    {portfolio?.code_quality_metrics && (
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-white mb-3">Code Quality</h2>
+                                            <div className="bg-gray-900/50 p-4 rounded-lg">
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                    {Object.entries(portfolio.code_quality_metrics).map(([key, value]) => (
+                                                        <div key={key} className="text-center">
+                                                            <div className="text-2xl font-bold text-blue-400 mb-1">
+                                                                {typeof value === 'number' ? value.toFixed(1) : value}
+                                                            </div>
+                                                            <div className="text-gray-400 text-xs capitalize">
+                                                                {key.replace(/_/g, ' ')}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Get in Touch */}
+                                    {portfolio?.ai_generated_content?.contact_info && (
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-white mb-3">Get in Touch</h2>
+                                            <div className="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 p-4 rounded-lg border border-indigo-500/30">
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                    {portfolio.ai_generated_content.contact_info.email && (
+                                                        <div className="text-center p-3 bg-gray-900/50 rounded-lg">
+                                                            <span className="text-xl mb-1 block">📧</span>
+                                                            <span className="text-gray-400 text-xs block mb-1">Email</span>
+                                                            <span className="text-blue-400 text-sm">{portfolio.ai_generated_content.contact_info.email}</span>
+                                                        </div>
+                                                    )}
+                                                    {portfolio.ai_generated_content.contact_info.linkedin && (
+                                                        <div className="text-center p-3 bg-gray-900/50 rounded-lg">
+                                                            <span className="text-xl mb-1 block">💼</span>
+                                                            <span className="text-gray-400 text-xs block mb-1">LinkedIn</span>
+                                                            <a href={portfolio.ai_generated_content.contact_info.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-400 text-sm">View Profile</a>
+                                                        </div>
+                                                    )}
+                                                    {portfolio.ai_generated_content.contact_info.github && (
+                                                        <div className="text-center p-3 bg-gray-900/50 rounded-lg">
+                                                            <span className="text-xl mb-1 block">💻</span>
+                                                            <span className="text-gray-400 text-xs block mb-1">GitHub</span>
+                                                            <a href={portfolio.ai_generated_content.contact_info.github} target="_blank" rel="noopener noreferrer" className="text-blue-400 text-sm">View Repos</a>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     )}
