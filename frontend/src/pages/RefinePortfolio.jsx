@@ -746,7 +746,7 @@ export default function RefinePortfolio() {
                             <h3 className="text-xl font-bold text-white mb-4">Quick Actions</h3>
                             <div className="space-y-3">
                                 <button
-                                    onClick={() => window.open(`/portfolio/${slug}`, '_blank')}
+                                    onClick={() => window.open(`/view/${slug}`, '_blank')}
                                     className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
                                 >
                                     View Public Portfolio
