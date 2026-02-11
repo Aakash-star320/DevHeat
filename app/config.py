@@ -4,6 +4,9 @@ from typing import List, Dict
 from dotenv import load_dotenv
 
 load_dotenv()
+print(f"DEBUG: GEMINI_API_KEY from env: {os.getenv('GEMINI_API_KEY')}")
+print(f"DEBUG: Current Source File: {__file__}")
+print(f"DEBUG: Current Working Directory: {os.getcwd()}")
 
 # File upload constraints
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB in bytes

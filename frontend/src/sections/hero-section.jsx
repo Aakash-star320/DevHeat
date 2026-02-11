@@ -12,7 +12,7 @@ export default function HeroSection() {
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5}}
+                transition={{ duration: 0.5 }}
             >
                 <rect x="-92" y="-948" width="1624" height="1624" rx="812" fill="url(#a)" />
                 <defs>
@@ -60,12 +60,7 @@ export default function HeroSection() {
                     Generate Portfolio
                     <ArrowRight className="size-5" />
                 </button>
-                <button
-                    onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-                    className="border border-slate-400 active:scale-95 hover:bg-white/10 transition rounded-lg px-8 h-11"
-                >
-                    Learn More
-                </button>
+
             </motion.div>
             <TiltedImage />
         </section>

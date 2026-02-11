@@ -270,7 +270,7 @@ export default function GeneratePortfolio() {
                             <div>
                                 <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
                                     <Github className="size-6 mr-3" />
-                                    GitHub Projects
+                                    Projects
                                 </h2>
 
                                 <div>
