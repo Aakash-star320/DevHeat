@@ -14,6 +14,10 @@ engine = create_async_engine(
     DATABASE_URL,
     echo=False,  # Set to True for SQL query logging during development
     future=True,
+    pool_pre_ping=True,  # Test connections before using them (prevents stale connections)
+    pool_recycle=3600,  # Recycle connections after 1 hour (3600 seconds)
+    pool_size=10,  # Maximum number of connections to maintain in the pool
+    max_overflow=20,  # Maximum overflow connections beyond pool_size
     # SQLite-specific settings for better concurrency
     connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
 )

@@ -14,7 +14,7 @@ from app.routers import (
     portfolio_retrieval_router,
     portfolio_editing_router,
     portfolio_refinement_router,
-    auth_router
+    career_bot_router
 )
 from app.config import logger
 from app.database import init_db, close_db

@@ -6,15 +6,17 @@ import Footer from '../components/footer';
 import LenisScroll from '../components/lenis-scroll';
 import CareerBotChat from '../components/CareerBotChat';
 import { useAuth } from '../hooks/useAuth';
+import authService from '../services/authService';
 
 export default function CareerBot() {
     const navigate = useNavigate();
     const { user, loading } = useAuth();
 
     useEffect(() => {
-        // Redirect to home if not authenticated
+        // Redirect to sign in if not authenticated, then come back after login
         if (!loading && !user) {
-            navigate('/');
+            sessionStorage.setItem('redirectAfterLogin', '/career-bot');
+            authService.login();
         }
     }, [user, loading, navigate]);
 
