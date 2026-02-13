@@ -7,10 +7,38 @@ from app.models.responses import (
     GitHubRepoAnalysis,
     ErrorResponse
 )
-from app.services.github_service import analyze_repository
+from app.services.github_service import analyze_repository, get_user_repositories
 from app.config import logger
+from app.routers.auth_router import get_current_user, User
+from fastapi import Depends
 
 router = APIRouter(prefix="/github", tags=["GitHub"])
+
+
+@router.get(
+    "/user-repos",
+    summary="Get user's GitHub repositories",
+    description="Fetches the authenticated user's repositories from GitHub"
+)
+async def get_my_repos(current_user: User = Depends(get_current_user)):
+    """
+    Get the authenticated user's GitHub repositories.
+    """
+    if not current_user.access_token:
+        raise HTTPException(
+            status_code=400,
+            detail="User does not have a GitHub access token. Please sign in again."
+        )
+
+    try:
+        repos = await get_user_repositories(current_user.access_token)
+        return {"repos": repos}
+    except Exception as e:
+        logger.error(f"Error fetching user repositories: {e}")
+        raise HTTPException(
+            status_code=502,
+            detail=f"Failed to fetch repositories from GitHub: {str(e)}"
+        )
 
 
 @router.post(

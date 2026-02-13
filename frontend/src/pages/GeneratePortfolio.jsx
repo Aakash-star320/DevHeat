@@ -1,14 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Upload, Github, Code2, Trophy } from 'lucide-react';
+import { ArrowRight, Upload, Github, Code2, Trophy, Search, Check, Plus } from 'lucide-react';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
 import LenisScroll from '../components/lenis-scroll';
 import portfolioService from '../services/portfolioService';
+import api from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 
 export default function GeneratePortfolio() {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [loadingMessage, setLoadingMessage] = useState('');
@@ -21,6 +24,50 @@ export default function GeneratePortfolio() {
         codeforces_username: '',
         leetcode_username: '',
     });
+
+    const [userRepos, setUserRepos] = useState([]);
+    const [repoSearch, setRepoSearch] = useState('');
+    const [selectedRepos, setSelectedRepos] = useState([]);
+    const [fetchingRepos, setFetchingRepos] = useState(false);
+
+    useEffect(() => {
+        if (user) {
+            fetchUserRepos();
+        }
+    }, [user]);
+
+    const fetchUserRepos = async () => {
+        setFetchingRepos(true);
+        try {
+            const response = await api.get('/github/user-repos');
+            setUserRepos(response.data.repos);
+        } catch (err) {
+            console.error('Failed to fetch user repos:', err);
+        } finally {
+            setFetchingRepos(false);
+        }
+    };
+
+    const toggleRepo = (repoUrl) => {
+        setSelectedRepos(prev => {
+            if (prev.includes(repoUrl)) {
+                return prev.filter(r => r !== repoUrl);
+            }
+            if (prev.length >= 5) {
+                return prev;
+            }
+            return [...prev, repoUrl];
+        });
+    };
+
+    useEffect(() => {
+        if (selectedRepos.length > 0) {
+            setFormData(prev => ({
+                ...prev,
+                github_repos: selectedRepos.join('\n')
+            }));
+        }
+    }, [selectedRepos]);
 
     const loadingMessages = [
         'Analyzing your professional profile...',
@@ -272,6 +319,66 @@ export default function GeneratePortfolio() {
                                     <Github className="size-6 mr-3" />
                                     Projects
                                 </h2>
+
+                                {user && (fetchingRepos || userRepos.length > 0) && (
+                                    <div className="mb-6">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <label className="block text-white font-medium">Import from your GitHub</label>
+                                            {fetchingRepos && (
+                                                <div className="flex items-center gap-2 text-indigo-400 text-xs">
+                                                    <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                                    </svg>
+                                                    Fetching...
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="relative mb-4">
+                                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-slate-500" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search your repositories..."
+                                                value={repoSearch}
+                                                onChange={(e) => setRepoSearch(e.target.value)}
+                                                className="w-full pl-11 pr-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-indigo-500"
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                                            {userRepos
+                                                .filter(repo => repo.full_name.toLowerCase().includes(repoSearch.toLowerCase()))
+                                                .map(repo => {
+                                                    const isSelected = selectedRepos.includes(repo.html_url);
+                                                    return (
+                                                        <button
+                                                            key={repo.full_name}
+                                                            type="button"
+                                                            onClick={() => toggleRepo(repo.html_url)}
+                                                            className={`text-left p-3 rounded-xl border transition flex items-center justify-between group ${
+                                                                isSelected
+                                                                    ? 'bg-indigo-600/20 border-indigo-500 text-indigo-100'
+                                                                    : 'bg-slate-800/30 border-slate-700 text-slate-400 hover:border-slate-500'
+                                                            }`}
+                                                        >
+                                                            <div className="truncate mr-2">
+                                                                <p className="text-sm font-medium truncate text-white">{repo.name}</p>
+                                                                <p className="text-xs truncate opacity-60">{repo.language || 'Plain Text'}</p>
+                                                            </div>
+                                                            {isSelected ? (
+                                                                <Check className="size-4 text-indigo-400 shrink-0" />
+                                                            ) : (
+                                                                <Plus className="size-4 opacity-0 group-hover:opacity-100 transition shrink-0" />
+                                                            )}
+                                                        </button>
+                                                    );
+                                                })
+                                            }
+                                        </div>
+                                        <p className="text-slate-500 text-xs mt-3">Selected {selectedRepos.length} / 5 repositories</p>
+                                    </div>
+                                )}
 
                                 <div>
                                     <label className="block text-white font-medium mb-2">Repository URLs</label>
