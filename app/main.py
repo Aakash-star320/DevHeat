@@ -12,9 +12,7 @@ from app.routers import (
     portfolio_router,
     portfolio_generation_router,
     portfolio_retrieval_router,
-    portfolio_editing_router,
-    portfolio_refinement_router,
-    auth_router
+    portfolio_refinement_router
 )
 from app.config import logger
 from app.database import init_db, close_db
@@ -67,8 +65,8 @@ if os.path.exists("frontend/dist"):
     app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="frontend-assets")
 
 # Register routers
-# Auth router
-app.include_router(auth_router.router)
+# Auth router (under /api to avoid clash with frontend /auth path)
+app.include_router(auth_router.router, prefix="/api")
 
 # Data extraction endpoints
 app.include_router(linkedin_router.router)
@@ -76,7 +74,6 @@ app.include_router(resume_router.router)
 app.include_router(codeforces_router.router)
 app.include_router(github_router.router)
 app.include_router(leetcode_router.router)
-app.include_router(auth_router.router)
 
 # Portfolio endpoints
 app.include_router(portfolio_router.router, prefix="/portfolio")  # Slug generation

@@ -4,11 +4,11 @@ const authService = {
     login: () => {
         // Redirect to backend login endpoint
         const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : '');
-        window.location.href = `${API_BASE_URL}/auth/login`;
+        window.location.href = `${API_BASE_URL}/api/auth/login`;
     },
 
     getCurrentUser: async () => {
-        const response = await api.get('/auth/me');
+        const response = await api.get('/api/auth/me');
         return response.data;
     },
 
