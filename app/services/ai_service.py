@@ -46,6 +46,12 @@ def prepare_ai_context(portfolio_data: Dict[str, Any]) -> Dict[str, Any]:
             "education": linkedin.get("education_raw", "")[:1000],
             "skills": linkedin.get("skills_raw", "")[:500]
         }
+    
+    # Add manual LinkedIn URL if provided
+    if portfolio_data.get("linkedin_url"):
+        if "linkedin" not in context:
+            context["linkedin"] = {}
+        context["linkedin"]["profile_url"] = portfolio_data["linkedin_url"]
 
     # Resume text
     if portfolio_data.get("resume_text"):
@@ -58,7 +64,8 @@ def prepare_ai_context(portfolio_data: Dict[str, Any]) -> Dict[str, Any]:
             project = {
                 "name": repo.get("name", ""),
                 "description": repo.get("description", ""),
-                "language": repo.get("primary_language", ""),
+                "language": repo.get("language", repo.get("primary_language", "")),
+                "url": repo.get("html_url", repo.get("github_url", "")),
                 "readme_summary": repo.get("readme_text", "")[:1000],  # First 1000 chars only
                 "structure": {
                     "files": repo.get("structure", {}).get("files", 0),
@@ -68,6 +75,10 @@ def prepare_ai_context(portfolio_data: Dict[str, Any]) -> Dict[str, Any]:
             }
             github_projects.append(project)
         context["github_projects"] = github_projects
+
+    # Add manual GitHub Profile URL if provided
+    if portfolio_data.get("github_profile_url"):
+         context["github_profile_url"] = portfolio_data["github_profile_url"]
 
     # Competitive programming stats
     if portfolio_data.get("codeforces_data"):
@@ -332,10 +343,13 @@ FOCUS: {focus} (emphasize skills and projects relevant to this area)
 DATA SOURCES:
 {json.dumps(context, indent=2)}
 
-TASK: Generate a professional portfolio with these sections. Output ONLY valid JSON, no markdown formatting.
+TASK: Generate a professional portfolio with these sections.
+- For "professional_titles", generate 3-5 punchy roles based on the user's data (e.g. "MERN Stack Developer", "Open Source Contributor", "Problem Solver").
+Output ONLY valid JSON, no markdown formatting.
 
 OUTPUT FORMAT (JSON):
 {{
+  "professional_titles": ["e.g. Full Stack Developer", "Open Source Contributor", "MERN Stack Developer"],
   "professional_summary": "3-4 sentence summary highlighting experience, skills, and focus area",
   "key_strengths": ["strength 1", "strength 2", "strength 3", "strength 4"],
   "work_experience": [
@@ -351,6 +365,7 @@ OUTPUT FORMAT (JSON):
       "name": "project name",
       "description": "compelling 2-3 sentence description of problem solved and impact",
       "technologies": ["tech1", "tech2"],
+      "github_url": "https://github.com/username/repo",
       "highlights": ["highlight 1", "highlight 2"]
     }}
   ],

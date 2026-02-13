@@ -43,6 +43,8 @@ async def generate_portfolio(
     github_repos: Optional[str] = Form(None),  # JSON array of URLs
     codeforces_username: Optional[str] = Form(None),
     leetcode_username: Optional[str] = Form(None),
+    linkedin_url: Optional[str] = Form(None),
+    github_profile_url: Optional[str] = Form(None),
     db: AsyncSession = Depends(get_db)
 ):
     # Optional authentication
@@ -142,37 +144,47 @@ async def generate_portfolio(
             "github_data": data_results["github_data"],
             "codeforces_data": data_results["codeforces_data"],
             "leetcode_data": data_results["leetcode_data"],
-            "code_quality_metrics": code_quality_metrics
+            "leetcode_data": data_results["leetcode_data"],
+            "code_quality_metrics": code_quality_metrics,
+            "linkedin_url": linkedin_url,
+            "github_profile_url": github_profile_url
         }
         ai_context = prepare_ai_context(ai_context_data)
 
-        # 7. Generate public portfolio content via AI
+        # 7 & 8. Generate public portfolio content and private coaching insights via AI concurrently
         try:
-            public_content = await generate_portfolio_content(ai_context, portfolio_focus)
-            logger.info("AI public portfolio content generated successfully")
+            public_task = generate_portfolio_content(ai_context, portfolio_focus)
+            private_task = generate_coaching_insights(ai_context, portfolio_focus)
+            
+            # Run both AI generations in parallel
+            public_content_res, private_content_res = await asyncio.gather(public_task, private_task, return_exceptions=True)
+            
+            if isinstance(public_content_res, Exception):
+                logger.error(f"AI content generation failed: {public_content_res}")
+                public_content = {
+                    "professional_summary": f"{name} is a {portfolio_focus} developer.",
+                    "key_strengths": ["Technical skills", "Problem solving"],
+                    "project_highlights": [],
+                    "skills_summary": {"languages": [], "frameworks": [], "tools": []}
+                }
+            else:
+                public_content = public_content_res
+                logger.info("AI public portfolio content generated successfully")
+                
+            if isinstance(private_content_res, Exception):
+                logger.error(f"AI coaching generation failed: {private_content_res}")
+                private_content = {
+                    "skill_analysis": {"strengths": [], "gaps": []},
+                    "learning_path": {"immediate": [], "short_term": [], "long_term": []},
+                    "interview_prep": {"likely_questions": [], "talking_points": []},
+                    "market_positioning": {"target_roles": [], "competitive_advantages": [], "resume_improvements": []}
+                }
+            else:
+                private_content = private_content_res
+                logger.info("AI coaching insights generated successfully")
         except Exception as e:
-            logger.error(f"AI content generation failed: {e}")
-            # Use template fallback
-            public_content = {
-                "professional_summary": f"{name} is a {portfolio_focus} developer.",
-                "key_strengths": ["Technical skills", "Problem solving"],
-                "project_highlights": [],
-                "skills_summary": {"languages": [], "frameworks": [], "tools": []}
-            }
-
-        # 8. Generate private coaching insights via AI
-        try:
-            private_content = await generate_coaching_insights(ai_context, portfolio_focus)
-            logger.info("AI coaching insights generated successfully")
-        except Exception as e:
-            logger.error(f"AI coaching generation failed: {e}")
-            # Use template fallback
-            private_content = {
-                "skill_analysis": {"strengths": [], "gaps": []},
-                "learning_path": {"immediate": [], "short_term": [], "long_term": []},
-                "interview_prep": {"likely_questions": [], "talking_points": []},
-                "market_positioning": {"target_roles": [], "competitive_advantages": [], "resume_improvements": []}
-            }
+            logger.error(f"Concurrent AI generation failed: {e}")
+            # Fallbacks already handled above via exceptions in gather
 
         # 9. Build final JSON structures
         personal_info = {
@@ -364,7 +376,8 @@ async def _parse_linkedin_file(file: UploadFile):
     try:
         validate_file(file)
         file_bytes = await file.read()
-        text = extract_text(file_bytes, file.filename)
+        # Offload CPU-intensive extraction to a thread pool
+        text = await asyncio.to_thread(extract_text, file_bytes, file.filename)
         return parse_linkedin_sections(text)
     except Exception as e:
         logger.error(f"LinkedIn parsing failed: {e}")
@@ -376,7 +389,8 @@ async def _parse_resume_file(file: UploadFile):
     try:
         validate_file(file)
         file_bytes = await file.read()
-        text = extract_text(file_bytes, file.filename)
+        # Offload CPU-intensive extraction to a thread pool
+        text = await asyncio.to_thread(extract_text, file_bytes, file.filename)
         return text
     except Exception as e:
         logger.error(f"Resume parsing failed: {e}")
@@ -393,14 +407,15 @@ async def _analyze_github_repos(repos_json: str):
         if not isinstance(repo_urls, list):
             raise ValueError("github_repos must be a JSON array")
 
-        # Analyze each repo
+        # Analyze each repo in parallel
+        repo_tasks = [analyze_repository(url) for url in repo_urls[:5]]  # Max 5 repos
+        results_raw = await asyncio.gather(*repo_tasks, return_exceptions=True)
         results = []
-        for url in repo_urls[:5]:  # Max 5 repos
-            try:
-                result = await analyze_repository(url)
-                results.append(result)
-            except Exception as e:
-                logger.warning(f"Failed to analyze {url}: {e}")
+        for i, res in enumerate(results_raw):
+            if isinstance(res, Exception):
+                logger.warning(f"Failed to analyze {repo_urls[i]}: {res}")
+            else:
+                results.append(res)
 
         return results if results else None
     except Exception as e:

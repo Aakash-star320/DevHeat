@@ -33,6 +33,7 @@ def build_public_portfolio_json(
             "focus": personal_info.get("portfolio_focus", "general")
         },
         "ai_generated_content": {
+            "professional_titles": ai_generated_content.get("professional_titles", []),
             "professional_summary": ai_generated_content.get("professional_summary", ""),
             "key_strengths": ai_generated_content.get("key_strengths", []),
             "work_experience": ai_generated_content.get("work_experience", []),
@@ -213,7 +214,7 @@ def merge_portfolio_updates(
     # Update AI-generated content fields
     if "ai_generated_content" in updated:
         for key, value in updates.items():
-            if key in ["professional_summary", "key_strengths", "project_highlights", "skills_summary"]:
+            if key in ["professional_titles", "professional_summary", "key_strengths", "project_highlights", "skills_summary"]:
                 updated["ai_generated_content"][key] = value
 
     # Update metadata

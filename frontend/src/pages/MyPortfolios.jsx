@@ -110,11 +110,10 @@ export default function MyPortfolios() {
                                 >
                                     <div className="p-6 flex-grow">
                                         <div className="flex items-center justify-between mb-4">
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                                portfolio.status === 'completed' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${portfolio.status === 'completed' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
                                                 portfolio.status === 'generating' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 animate-pulse' :
-                                                'bg-red-500/10 text-red-400 border border-red-500/20'
-                                            }`}>
+                                                    'bg-red-500/10 text-red-400 border border-red-500/20'
+                                                }`}>
                                                 {portfolio.status}
                                             </span>
                                             <span className="text-slate-500 text-xs flex items-center gap-1">
@@ -140,7 +139,7 @@ export default function MyPortfolios() {
                                             Manage
                                         </Link>
                                         <Link
-                                            to={`/view/${portfolio.slug}`}
+                                            to={`/display/${portfolio.slug}`}
                                             target="_blank"
                                             className="px-3 flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition"
                                         >

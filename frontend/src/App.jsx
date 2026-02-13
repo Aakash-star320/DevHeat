@@ -8,6 +8,8 @@ import AuthCallback from './pages/AuthCallback';
 import CareerBot from './pages/CareerBot';
 import { AuthProvider } from './context/AuthContext';
 
+
+
 export default function App() {
     return (
         <AuthProvider>

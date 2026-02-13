@@ -222,59 +222,10 @@ export default function RefinePortfolio() {
                                     {/* Professional Summary */}
                                     {portfolio?.ai_generated_content?.professional_summary && (
                                         <div>
-                                            <h2 className="text-2xl font-bold text-white mb-3">About Me</h2>
+                                            <h2 className="text-2xl font-bold text-white mb-3">Professional Summary</h2>
                                             <p className="text-gray-300 leading-relaxed">
                                                 {portfolio.ai_generated_content.professional_summary}
                                             </p>
-                                        </div>
-                                    )}
-
-                                    {/* Key Strengths */}
-                                    {portfolio?.ai_generated_content?.key_strengths?.length > 0 && (
-                                        <div>
-                                            <h2 className="text-2xl font-bold text-white mb-3">Key Strengths</h2>
-                                            <ul className="space-y-2">
-                                                {portfolio.ai_generated_content.key_strengths.map((strength, idx) => (
-                                                    <li key={idx} className="text-gray-300 flex items-start">
-                                                        <span className="text-blue-500 mr-2">•</span>
-                                                        {strength}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
-
-                                    {/* Project Highlights */}
-                                    {portfolio?.ai_generated_content?.project_highlights?.length > 0 && (
-                                        <div>
-                                            <h2 className="text-2xl font-bold text-white mb-3">Featured Projects</h2>
-                                            <div className="space-y-4">
-                                                {portfolio.ai_generated_content.project_highlights.map((project, idx) => (
-                                                    <div key={idx} className="bg-gray-900/50 p-4 rounded-lg">
-                                                        <h3 className="text-xl font-semibold text-white mb-2">
-                                                            {project.title || `Project ${idx + 1}`}
-                                                        </h3>
-                                                        <p className="text-gray-400">{project.description || project}</p>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Skills */}
-                                    {portfolio?.ai_generated_content?.skills?.length > 0 && (
-                                        <div>
-                                            <h2 className="text-2xl font-bold text-white mb-3">Technical Skills</h2>
-                                            <div className="flex flex-wrap gap-2">
-                                                {portfolio.ai_generated_content.skills.map((skill, idx) => (
-                                                    <span
-                                                        key={idx}
-                                                        className="px-4 py-2 bg-blue-600/20 border border-blue-500/50 rounded-full text-blue-300"
-                                                    >
-                                                        {skill}
-                                                    </span>
-                                                ))}
-                                            </div>
                                         </div>
                                     )}
 
@@ -308,6 +259,37 @@ export default function RefinePortfolio() {
                                         </div>
                                     )}
 
+                                    {/* Project Highlights */}
+                                    {portfolio?.ai_generated_content?.project_highlights?.length > 0 && (
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-white mb-3">Project Highlights</h2>
+                                            <div className="space-y-4">
+                                                {portfolio.ai_generated_content.project_highlights.map((project, idx) => (
+                                                    <div key={idx} className="bg-gray-900/50 p-4 rounded-lg">
+                                                        <h3 className="text-xl font-semibold text-white mb-2">
+                                                            {project.title || project.name || `Project ${idx + 1}`}
+                                                        </h3>
+                                                        <p className="text-gray-400 mb-3">{project.description}</p>
+                                                        {project.github_url && (
+                                                            <a href={project.github_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 text-sm hover:underline">
+                                                                View Repo →
+                                                            </a>
+                                                        )}
+                                                        {project.technologies && (
+                                                            <div className="flex flex-wrap gap-2 mt-3">
+                                                                {project.technologies.map((tech, i) => (
+                                                                    <span key={i} className="px-2 py-1 bg-blue-600/10 border border-blue-500/30 rounded text-blue-300 text-xs">
+                                                                        {tech}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Achievements */}
                                     {portfolio?.ai_generated_content?.achievements?.length > 0 && (
                                         <div>
@@ -323,10 +305,24 @@ export default function RefinePortfolio() {
                                         </div>
                                     )}
 
-                                    {/* Skills & Technologies */}
+                                    {/* Key Strengths */}
+                                    {portfolio?.ai_generated_content?.key_strengths?.length > 0 && (
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-white mb-3">Key Strengths</h2>
+                                            <div className="flex flex-wrap gap-2">
+                                                {portfolio.ai_generated_content.key_strengths.map((strength, idx) => (
+                                                    <span key={idx} className="px-4 py-2 bg-purple-600/20 border border-purple-500/50 rounded-full text-purple-300">
+                                                        {strength}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Skills Summary */}
                                     {portfolio?.ai_generated_content?.skills_summary && (
                                         <div>
-                                            <h2 className="text-2xl font-bold text-white mb-3">Skills & Technologies</h2>
+                                            <h2 className="text-2xl font-bold text-white mb-3">Skills Summary</h2>
                                             <div className="space-y-4">
                                                 {portfolio.ai_generated_content.skills_summary.languages && (
                                                     <div>
@@ -368,44 +364,10 @@ export default function RefinePortfolio() {
                                         </div>
                                     )}
 
-                                    {/* Projects (GitHub) */}
-                                    {portfolio?.data_sources?.github_projects?.length > 0 && (
-                                        <div>
-                                            <h2 className="text-2xl font-bold text-white mb-3">Projects</h2>
-                                            <div className="space-y-3">
-                                                {portfolio.data_sources.github_projects.map((project, idx) => (
-                                                    <div key={idx} className="bg-gray-900/50 p-4 rounded-lg">
-                                                        <div className="flex items-start justify-between mb-2">
-                                                            <h3 className="text-lg font-semibold text-white">{project.name}</h3>
-                                                            {project.language && (
-                                                                <span className="px-2 py-1 bg-purple-600/20 border border-purple-500/50 rounded-full text-purple-300 text-xs">
-                                                                    {project.language}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        {project.description && project.description.trim() && (
-                                                            <p className="text-gray-400 text-sm mb-2">{project.description}</p>
-                                                        )}
-                                                        {project.github_url && (
-                                                            <a
-                                                                href={project.github_url}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="text-blue-400 hover:text-blue-300 text-xs"
-                                                            >
-                                                                View on GitHub →
-                                                            </a>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Competitive Programming */}
+                                    {/* Coding Profiles */}
                                     {portfolio?.data_sources?.competitive_programming && (
                                         <div>
-                                            <h2 className="text-2xl font-bold text-white mb-3">Competitive Programming</h2>
+                                            <h2 className="text-2xl font-bold text-white mb-3">Coding Profiles</h2>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 {portfolio.data_sources.competitive_programming.codeforces && (
                                                     <div className="bg-gradient-to-br from-orange-900/20 to-orange-800/20 p-4 rounded-lg border border-orange-500/30">
@@ -431,27 +393,6 @@ export default function RefinePortfolio() {
                                                         </div>
                                                     </div>
                                                 )}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Code Quality */}
-                                    {portfolio?.code_quality_metrics && (
-                                        <div>
-                                            <h2 className="text-2xl font-bold text-white mb-3">Code Quality</h2>
-                                            <div className="bg-gray-900/50 p-4 rounded-lg">
-                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                                    {Object.entries(portfolio.code_quality_metrics).map(([key, value]) => (
-                                                        <div key={key} className="text-center">
-                                                            <div className="text-2xl font-bold text-blue-400 mb-1">
-                                                                {typeof value === 'number' ? value.toFixed(1) : value}
-                                                            </div>
-                                                            <div className="text-gray-400 text-xs capitalize">
-                                                                {key.replace(/_/g, ' ')}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
                                             </div>
                                         </div>
                                     )}
@@ -777,7 +718,7 @@ export default function RefinePortfolio() {
                             <h3 className="text-xl font-bold text-white mb-4">Quick Actions</h3>
                             <div className="space-y-3">
                                 <button
-                                    onClick={() => window.open(`/view/${slug}`, '_blank')}
+                                    onClick={() => window.open(`/display/${slug}`, '_blank')}
                                     className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
                                 >
                                     View Public Portfolio

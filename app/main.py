@@ -14,8 +14,7 @@ from app.routers import (
     portfolio_retrieval_router,
     portfolio_editing_router,
     portfolio_refinement_router,
-    auth_router,
-    career_bot_router
+    auth_router
 )
 from app.config import logger
 from app.database import init_db, close_db
@@ -68,8 +67,8 @@ if os.path.exists("frontend/dist"):
     app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="frontend-assets")
 
 # Register routers
-# Auth router
-app.include_router(auth_router.router)
+# Auth router (under /api to avoid clash with frontend /auth path)
+app.include_router(auth_router.router, prefix="/api")
 
 # Data extraction endpoints
 app.include_router(linkedin_router.router)
@@ -77,7 +76,6 @@ app.include_router(resume_router.router)
 app.include_router(codeforces_router.router)
 app.include_router(github_router.router)
 app.include_router(leetcode_router.router)
-app.include_router(auth_router.router)
 
 # Portfolio endpoints
 app.include_router(portfolio_router.router, prefix="/portfolio")  # Slug generation
@@ -150,6 +148,11 @@ if os.path.exists("frontend/dist"):
     async def serve_portfolio_view(slug: str):
         """Serve the public portfolio view UI"""
         return FileResponse("frontend/dist/index.html")
+    
+    @app.get("/display/{slug}")
+    async def serve_portfolio_display(slug: str):
+        """Serve the isolated portfolio display UI (MPA)"""
+        return FileResponse("frontend/dist/display.html")
     
     @app.get("/{full_path:path}")
     async def serve_frontend(full_path: str):
