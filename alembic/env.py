@@ -20,7 +20,7 @@ if sys.platform == 'win32':
 
 # Import your models' Base for autogenerate support
 from app.database import Base
-from app.models.database import Portfolio, PortfolioVersion  # noqa
+from app.models.database import User, Portfolio, PortfolioVersion  # noqa
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -72,7 +72,11 @@ def run_migrations_offline() -> None:
 
 def do_run_migrations(connection: Connection) -> None:
     """Run migrations within a connection context."""
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        render_as_batch=True
+    )
 
     with context.begin_transaction():
         context.run_migrations()

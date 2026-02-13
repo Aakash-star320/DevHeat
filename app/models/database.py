@@ -28,6 +28,28 @@ def get_uuid():
     return str(uuid.uuid4())
 
 
+class User(Base):
+    """User table for GitHub authentication"""
+    __tablename__ = "users"
+
+    id = Column(String(36), primary_key=True, default=get_uuid)
+    github_id = Column(String(100), unique=True, nullable=False, index=True)
+    username = Column(String(100), nullable=False)
+    email = Column(String(255), nullable=True)
+    avatar_url = Column(String(255), nullable=True)
+    access_token = Column(String(255), nullable=True)
+
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Relationships
+    portfolios = relationship("Portfolio", back_populates="user")
+
+    def __repr__(self):
+        return f"<User(username='{self.username}', github_id='{self.github_id}')>"
+
+
 class Portfolio(Base):
     """Portfolio table storing all user portfolio data"""
     __tablename__ = "portfolios"
@@ -73,6 +95,9 @@ class Portfolio(Base):
     # Error tracking
     error_message = Column(Text, nullable=True)
 
+    # User relationship
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=True)
+
     # Current version reference
     current_version_id = Column(String(36), ForeignKey("portfolio_versions.id"), nullable=True)
 
@@ -83,6 +108,7 @@ class Portfolio(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
+    user = relationship("User", back_populates="portfolios")
     versions = relationship("PortfolioVersion", back_populates="portfolio", foreign_keys="PortfolioVersion.portfolio_id", cascade="all, delete-orphan")
     current_version = relationship("PortfolioVersion", foreign_keys=[current_version_id], uselist=False, post_update=True)
 
