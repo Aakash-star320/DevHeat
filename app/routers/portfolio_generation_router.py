@@ -6,12 +6,13 @@ import time
 from typing import Optional
 from datetime import datetime
 
-from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models.database import Portfolio
+from app.models.database import Portfolio, User
 from app.models.portfolio_schemas import PortfolioGenerateResponse, PortfolioErrorResponse
+from app.routers.auth_router import get_current_user, verify_token
 from app.utils.slug import generate_portfolio_slug
 from app.utils.validators import validate_file
 from app.utils.file_parser import extract_text
@@ -34,6 +35,7 @@ router = APIRouter(prefix="/portfolio", tags=["Portfolio Generation"])
 
 @router.post("/generate", response_model=PortfolioGenerateResponse)
 async def generate_portfolio(
+    request: Request,
     name: str = Form(..., min_length=1, max_length=200),
     portfolio_focus: str = Form(default="general"),
     linkedin_file: Optional[UploadFile] = File(None),
@@ -43,6 +45,15 @@ async def generate_portfolio(
     leetcode_username: Optional[str] = Form(None),
     db: AsyncSession = Depends(get_db)
 ):
+    # Optional authentication
+    user_id = None
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+        payload = verify_token(token)
+        if payload:
+            user_id = payload.get("sub")
+
     """
     Generate a complete portfolio from multiple data sources.
 
@@ -79,6 +90,7 @@ async def generate_portfolio(
             name=name,
             portfolio_focus=portfolio_focus,
             status="generating",
+            user_id=user_id,
             generation_started_at=datetime.utcnow()
         )
         db.add(portfolio)

@@ -223,6 +223,38 @@ async def get_readme(
         raise
 
 
+async def get_user_repositories(access_token: str) -> list:
+    """
+    Fetch the authenticated user's repositories from GitHub.
+    """
+    headers = {
+        "Authorization": f"token {access_token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28"
+    }
+
+    async with httpx.AsyncClient(headers=headers, timeout=30.0) as client:
+        # Fetch user's repositories (sorted by last updated)
+        response = await client.get(
+            f"{GITHUB_API_BASE}/user/repos?sort=updated&per_page=100",
+        )
+        response.raise_for_status()
+
+        repos = response.json()
+        return [
+            {
+                "name": repo.get("name"),
+                "full_name": repo.get("full_name"),
+                "html_url": repo.get("html_url"),
+                "description": repo.get("description"),
+                "language": repo.get("language"),
+                "stargazers_count": repo.get("stargazers_count"),
+                "updated_at": repo.get("updated_at")
+            }
+            for repo in repos
+        ]
+
+
 async def analyze_repository(repo_url: str) -> GitHubRepoAnalysis:
     """
     Analyze a single GitHub repository.

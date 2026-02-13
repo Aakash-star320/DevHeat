@@ -67,6 +67,12 @@ const portfolioService = {
         return response.data;
     },
 
+    // Get User Portfolios
+    getMyPortfolios: async () => {
+        const response = await api.get('/portfolio/me/all');
+        return response.data;
+    },
+
     // Upload LinkedIn Profile
     uploadLinkedIn: async (file) => {
         const formData = new FormData();
