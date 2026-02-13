@@ -24,11 +24,18 @@ A full-stack application that generates professional portfolios by aggregating d
 
 ## Features
 
+### Authentication & User Management
+- **GitHub OAuth Integration** - Secure sign-in with GitHub account
+- **User Profiles** - Persistent user data with avatar and email
+- **Session Management** - JWT-based authentication with secure token handling
+- **My Portfolios** - Dashboard to view and manage all your portfolios
+
 ### Portfolio Generation
 - **AI Content Generation** - Professional summaries, project highlights, and skill assessments using Google Gemini
 - **Multi-Source Aggregation** - Combines LinkedIn, Resume, GitHub, Codeforces, and LeetCode data
 - **Code Quality Analysis** - Analyzes GitHub repositories for complexity, documentation, and best practices
 - **Public/Private Output** - Public portfolio JSON + private coaching insights
+- **User-Linked Portfolios** - All portfolios are tied to your GitHub account
 
 ### AI-Powered Refinement
 - **Intelligent Refinement** - AI-assisted portfolio editing with natural language instructions
@@ -48,6 +55,7 @@ A full-stack application that generates professional portfolios by aggregating d
 - **Smooth Animations** - Framer Motion animations and Lenis smooth scrolling
 - **Dynamic Loading** - Rotating messages with time estimates during generation
 - **Interactive UI** - Easy-to-use forms with real-time validation
+- **Context-Based State Management** - React Context for global authentication state
 
 ---
 
@@ -59,8 +67,10 @@ A full-stack application that generates professional portfolios by aggregating d
 - **SQLAlchemy** (2.0.36+) - Async ORM with PostgreSQL/SQLite support
 - **Alembic** (1.13.1) - Database migrations
 - **Pydantic** - Data validation and serialization
+- **PyJWT** - JSON Web Token implementation for authentication
+- **python-jose** - JWT token creation and verification
 - **Google Gemini** (0.7.2) - AI content generation
-- **httpx** (0.28.1) - Async HTTP client
+- **httpx** (0.28.1) - Async HTTP client (GitHub OAuth & API calls)
 - **pdfplumber** (0.11.4) - PDF text extraction
 - **python-docx** (1.1.2) - DOCX text extraction
 
@@ -75,9 +85,11 @@ A full-stack application that generates professional portfolios by aggregating d
 - **Lucide React** (0.545.0) - Beautiful icon library
 
 ### External Services
+- **GitHub OAuth** - User authentication via OAuth 2.0
 - **GitHub API** - Repository metadata and analysis
 - **Codeforces API** - Competitive programming statistics
 - **LeetCode GraphQL** - Problem-solving statistics
+- **Google Gemini AI** - Content generation and refinement
 
 ---
 
@@ -90,6 +102,7 @@ DevHeat/
 │   ├── config.py                            # Configuration (API keys, constants)
 │   ├── database.py                          # Database session management
 │   ├── routers/
+│   │   ├── auth_router.py                   # GitHub OAuth authentication
 │   │   ├── linkedin_router.py               # LinkedIn profile upload
 │   │   ├── resume_router.py                 # Resume upload
 │   │   ├── codeforces_router.py             # Codeforces API integration
@@ -98,19 +111,22 @@ DevHeat/
 │   │   ├── portfolio_router.py              # Slug generation
 │   │   ├── portfolio_generation_router.py   # Main orchestrator
 │   │   ├── portfolio_retrieval_router.py    # GET endpoints
-│   │   └── portfolio_editing_router.py      # PATCH/POST endpoints
+│   │   ├── portfolio_editing_router.py      # PATCH/POST endpoints
+│   │   └── portfolio_refinement_router.py   # AI refinement endpoints
 │   ├── services/
 │   │   ├── github_service.py                # GitHub API logic
 │   │   ├── leetcode_service.py              # LeetCode GraphQL logic
 │   │   ├── ai_service.py                    # Gemini API integration
+│   │   ├── ai_refinement_service.py         # AI-powered portfolio refinement
 │   │   ├── code_quality_service.py          # Heuristic analysis
 │   │   └── portfolio_builder_service.py     # JSON construction
 │   ├── models/
 │   │   ├── responses.py                     # Pydantic response models
-│   │   ├── database.py                      # SQLAlchemy ORM models
+│   │   ├── database.py                      # SQLAlchemy ORM models (User, Portfolio, PortfolioVersion)
 │   │   ├── schemas.py                       # DB Pydantic schemas
 │   │   └── portfolio_schemas.py             # Portfolio request/response
 │   └── utils/
+│       ├── auth.py                          # JWT token creation and verification
 │       ├── validators.py                    # File validation
 │       ├── file_parser.py                   # Text extraction
 │       └── slug.py                          # Slug generation
@@ -118,18 +134,35 @@ DevHeat/
 ├── frontend/                                # React frontend application
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── navbar.jsx                   # Navigation bar with SmartFolio branding
+│   │   │   ├── navbar.jsx                   # Navigation with GitHub auth & user menu
 │   │   │   ├── footer.jsx                   # Footer with links and newsletter
-│   │   │   └── lenis-scroll.jsx             # Smooth scroll wrapper
+│   │   │   ├── lenis-scroll.jsx             # Smooth scroll wrapper
+│   │   │   ├── section-title.jsx            # Reusable section titles
+│   │   │   └── tilt-image.jsx               # 3D tilt effect for images
 │   │   ├── pages/
 │   │   │   ├── LandingPage.jsx              # Home page with features showcase
+│   │   │   ├── AuthCallback.jsx             # GitHub OAuth callback handler
 │   │   │   ├── GeneratePortfolio.jsx        # Portfolio generation form
+│   │   │   ├── MyPortfolios.jsx             # User's portfolio dashboard
 │   │   │   ├── RefinePortfolio.jsx          # Refinement UI with coaching tab
 │   │   │   └── ViewPortfolio.jsx            # Public portfolio display
+│   │   ├── context/
+│   │   │   └── AuthContext.jsx              # Global authentication state management
+│   │   ├── hooks/
+│   │   │   └── useAuth.js                   # Custom hook for accessing auth context
 │   │   ├── services/
-│   │   │   ├── api.js                       # Axios instance configuration
-│   │   │   └── portfolioService.js          # API methods for portfolio operations
-│   │   ├── App.jsx                          # Main app with routing
+│   │   │   ├── api.js                       # Axios instance with auth interceptors
+│   │   │   ├── authService.js               # Authentication API methods
+│   │   │   └── portfolioService.js          # Portfolio API methods
+│   │   ├── sections/
+│   │   │   ├── hero-section.jsx             # Landing page hero
+│   │   │   ├── about-our-apps.jsx           # Features showcase
+│   │   │   ├── get-in-touch.jsx             # Contact section
+│   │   │   ├── our-latest-creation.jsx      # Portfolio examples
+│   │   │   ├── our-testimonials.jsx         # User testimonials
+│   │   │   ├── subscribe-newsletter.jsx     # Newsletter signup
+│   │   │   └── trusted-companies.jsx        # Company logos
+│   │   ├── App.jsx                          # Main app with routing & AuthProvider
 │   │   └── main.jsx                         # Entry point
 │   ├── public/
 │   │   └── favicon.png                      # Favicon
@@ -160,7 +193,9 @@ DevHeat/
 - **Python** 3.8+
 - **Node.js** 18+ and npm
 - **Git**
-- **GitHub Personal Access Token**
+- **GitHub Account** (for OAuth authentication)
+- **GitHub OAuth App** (create at https://github.com/settings/developers)
+- **GitHub Personal Access Token** (optional, for repository analysis)
 - **Google Gemini API Key**
 
 ### 1. Clone Repository
@@ -195,7 +230,20 @@ pip install -r requirements.txt
 Create a `.env` file in the project root:
 
 ```env
-# GitHub API Token (for repository analysis)
+# GitHub OAuth (required for "Sign in with GitHub")
+# Development (local testing)
+GITHUB_CLIENT_ID=your_github_oauth_client_id
+GITHUB_CLIENT_SECRET=your_github_oauth_client_secret
+GITHUB_REDIRECT_URI=http://localhost:8000/auth/callback
+FRONTEND_URL=http://localhost:5173
+
+# Production (fill when you deploy)
+# PROD_GITHUB_CLIENT_ID=your_prod_client_id
+# PROD_GITHUB_CLIENT_SECRET=your_prod_client_secret
+# PROD_GITHUB_REDIRECT_URI=https://<your-backend-domain>/auth/callback
+# PROD_FRONTEND_URL=https://<your-frontend-domain>
+
+# GitHub API Token (for repository analysis - optional but recommended)
 GITHUB_TOKEN=your_github_personal_access_token_here
 
 # Google Gemini API Key (for AI content generation)
@@ -203,16 +251,31 @@ GEMINI_API_KEY=your_gemini_api_key_here
 
 # Database URL (SQLite for development, PostgreSQL for production)
 DATABASE_URL=sqlite+aiosqlite:///./portfolio.db
+# For PostgreSQL: postgresql+psycopg://user:password@host/dbname
+
+# JWT secret for issuing session tokens (change in production!)
+JWT_SECRET=change-me-in-production-use-random-string
 
 # Optional: Override default host/port
 # HOST=0.0.0.0
 # PORT=8000
 ```
 
-**To get a GitHub token:**
+**To set up GitHub OAuth:**
+1. Go to https://github.com/settings/developers
+2. Click "New OAuth App"
+3. Fill in:
+   - **Application name**: SmartFolio (or your app name)
+   - **Homepage URL**: `http://localhost:5173` (dev) or your domain (prod)
+   - **Authorization callback URL**: `http://localhost:8000/auth/callback` (dev) or `https://your-backend.com/auth/callback` (prod)
+4. Click "Register application"
+5. Copy **Client ID** and generate a **Client secret**
+6. Paste both into your `.env` file
+
+**To get a GitHub API token (for repo analysis):**
 1. Go to https://github.com/settings/tokens
 2. Click "Generate new token (classic)"
-3. Select `public_repo` scope
+3. Select scopes: `public_repo`, `read:user`, `user:email`
 4. Copy and paste into `.env`
 
 **To get a Gemini API key:**
@@ -248,13 +311,15 @@ cd frontend
 npm install
 ```
 
-#### 3.3 Configure Frontend Environment (Optional)
+#### 3.3 Configure Frontend Environment
 
-Create `frontend/.env` file if you need to override the API URL:
+Create `frontend/.env` file with the backend API URL:
 
 ```env
 VITE_API_URL=http://localhost:8000
 ```
+
+**Note**: This is required for the frontend to communicate with the backend API. The default value points to `http://localhost:8000` for development.
 
 #### 3.4 Start Frontend Development Server
 
@@ -276,9 +341,17 @@ Frontend will be available at: **http://localhost:5173** (or the port Vite assig
 
 ### 1. Landing Page
 - Visit the home page to learn about SmartFolio
-- Click "Generate Portfolio" to start
+- Browse features, testimonials, and examples
+- Click "Sign in with GitHub" in the navbar (required for portfolio generation)
 
-### 2. Generate Portfolio
+### 2. GitHub Authentication
+- Click "Sign in with GitHub" button
+- Authorize SmartFolio to access your GitHub profile
+- Get redirected back to the app with your account created
+- Your avatar and username appear in the navbar
+
+### 3. Generate Portfolio
+- Click "Generate Portfolio" button (navbar or hero section)
 - Fill in your basic information (name, portfolio focus)
 - Upload documents (LinkedIn PDF, Resume)
 - Add GitHub repository URLs (up to 5)
@@ -286,7 +359,7 @@ Frontend will be available at: **http://localhost:5173** (or the port Vite assig
 - Click "Generate Portfolio with AI"
 - Watch dynamic loading messages (30-60 seconds)
 
-### 3. Refine Portfolio
+### 4. Refine Portfolio
 - View your AI-generated portfolio content
 - Switch to "Personalized Insights" tab to see AI-powered feedback:
   - Skill Analysis (Strengths & Gaps)
@@ -297,7 +370,13 @@ Frontend will be available at: **http://localhost:5173** (or the port Vite assig
 - Confirm current version to save changes
 - View version history and revert if needed
 
-### 4. View Public Portfolio
+### 5. My Portfolios Dashboard
+- Access "My Portfolios" from the user menu (top right avatar)
+- View all portfolios you've created
+- Quick links to refine or view each portfolio
+- Track creation dates and portfolio slugs
+
+### 6. View Public Portfolio
 - Click "View Public Portfolio" to see the final result
 - Share the portfolio URL with recruiters
 - All data is beautifully presented with:
@@ -319,7 +398,54 @@ http://localhost:8000
 ```
 
 ### Authentication
-Currently no authentication required for public endpoints. Private coaching endpoint should be secured in production.
+
+SmartFolio uses **GitHub OAuth** for user authentication and **JWT tokens** for API authorization.
+
+#### Login with GitHub
+
+```bash
+GET /auth/login
+```
+
+Redirects to GitHub OAuth authorization page. After user authorizes, GitHub redirects to `/auth/callback`.
+
+#### OAuth Callback
+
+```bash
+GET /auth/callback?code={authorization_code}
+```
+
+Handles GitHub OAuth callback:
+1. Exchanges authorization code for GitHub access token
+2. Fetches user info from GitHub API
+3. Creates or updates user in database
+4. Generates JWT token
+5. Redirects to frontend with token: `{FRONTEND_URL}/auth/callback?token={jwt_token}`
+
+#### Get Current User
+
+```bash
+GET /auth/me
+Authorization: Bearer {jwt_token}
+```
+
+Returns authenticated user information.
+
+**Response:**
+```json
+{
+  "id": "user-uuid",
+  "username": "octocat",
+  "email": "octocat@github.com",
+  "avatar_url": "https://avatars.githubusercontent.com/u/123456"
+}
+```
+
+**Protected Routes:**
+- `POST /portfolio/generate` - Requires authentication
+- `GET /portfolio/{slug}/coaching` - Requires authentication
+- `POST /portfolio/{slug}/refine` - Requires authentication
+- All other portfolio management endpoints
 
 ### Health Check
 
@@ -656,49 +782,81 @@ Returns problem-solving statistics via GraphQL.
 ## Frontend Pages
 
 ### 1. Landing Page (`/`)
-- Hero section with gradient background
-- Features showcase
-- Testimonials
+- Hero section with gradient background and animations
+- "Sign in with GitHub" button in navbar
+- Features showcase with smooth scroll
+- Testimonials and social proof
+- Newsletter subscription
 - Call-to-action buttons
+- Footer with company links
 
-### 2. Generate Portfolio (`/generate`)
-- Multi-section form with animations
-- Dynamic loading states
-- Time estimates (30-60 seconds)
-- Rotating messages during generation:
+### 2. Auth Callback (`/auth/callback`)
+- Handles GitHub OAuth redirect
+- Extracts JWT token from URL parameters
+- Stores token in localStorage
+- Fetches user data and updates AuthContext
+- Loading spinner with "Completing sign in..." message
+- Auto-redirects to home page
+
+### 3. My Portfolios (`/my-portfolios`)
+- Dashboard showing all user's portfolios
+- Grid layout with portfolio cards
+- Each card shows:
+  - Portfolio name and slug
+  - Creation date
+  - Quick action buttons (Refine, View)
+- "Create New Portfolio" button
+- Requires authentication (redirects to login if not authenticated)
+
+### 4. Generate Portfolio (`/generate`)
+- Multi-section form with smooth animations
+- Input fields:
+  - Name and portfolio focus
+  - LinkedIn PDF upload
+  - Resume PDF/DOCX upload
+  - GitHub repository URLs
+  - Codeforces/LeetCode usernames
+- Dynamic loading states with rotating messages:
   - "Analyzing your professional profile..."
   - "Fetching GitHub repositories..."
   - "Generating AI-powered insights..."
   - And more!
+- Time estimates (30-60 seconds)
+- Requires authentication
 
-### 3. Refine Portfolio (`/refine/:slug`)
+### 5. Refine Portfolio (`/refine/:slug`)
 - Two-tab interface: Portfolio | Personalized Insights
-- Portfolio tab:
+- **Portfolio tab:**
   - Professional summary
   - Key strengths
   - Project highlights
   - Skills
-- Personalized Insights tab (auto-loads):
+  - Work experience
+  - AI refinement input with natural language instructions
+  - Confirm/Revert version controls
+- **Personalized Insights tab** (auto-loads):
   - Skill Analysis - Strengths (Green) & Gaps (Yellow)
   - Learning Path (Blue) - Immediate, Short-term, Long-term
   - Interview Prep (Purple) - Questions & Talking Points
   - Market Positioning (Indigo) - Roles & Advantages
-- AI refinement controls
-- Version management (clean UI without internal states)
-- Confirm current version / Revert actions
+- Version management (clean UI without exposing internal states)
+- "View Public Portfolio" link
+- Requires authentication
 
-### 4. View Portfolio (`/portfolio/:slug`)
-- Beautiful public portfolio display
+### 6. View Portfolio (`/portfolio/:slug`)
+- Beautiful public portfolio display (no auth required)
 - Responsive grid layout
-- Sections:
+- Polished sections:
   - Professional Summary
   - Work Experience
-  - Featured Projects
-  - Achievements
+  - Featured Projects with tech stacks
+  - Achievements and awards
   - Skills & Technologies
-  - GitHub Projects
+  - GitHub Projects with stats
   - Competitive Programming Stats
   - Contact Information
+- Shareable URL for recruiters
+- Mobile-optimized design
 
 ---
 
@@ -728,41 +886,86 @@ Returns problem-solving statistics via GraphQL.
 ### Frontend Architecture
 
 #### Component Structure
-- **Navbar**: Sticky navigation with smooth animations
+- **Navbar**: Sticky navigation with GitHub auth, user menu dropdown, and smooth animations
 - **Footer**: Links, newsletter subscription, copyright
-- **LenisScroll**: Smooth scrolling wrapper
+- **LenisScroll**: Smooth scrolling wrapper for entire app
+- **SectionTitle**: Reusable component for section headers
+- **TiltImage**: 3D tilt effect for hero images
 - **Pages**: Separate components for each route
 
 #### State Management
-- React hooks (useState, useEffect)
-- Local state for form data
-- API calls via Axios
+- **React Context API**: Global authentication state via `AuthContext`
+- **Custom Hooks**: `useAuth` hook for accessing auth state anywhere
+- **Local State**: Component-level state with useState/useEffect
+- **Session Persistence**: JWT tokens stored in localStorage
+- **Automatic Session Restore**: On app load, checks for existing token and fetches user data
+
+#### Authentication Flow
+1. User clicks "Sign in with GitHub" → triggers `authService.login()`
+2. Redirects to backend `/auth/login` → redirects to GitHub OAuth
+3. GitHub redirects back to backend `/auth/callback` with code
+4. Backend exchanges code for token, creates user, generates JWT
+5. Backend redirects to frontend `/auth/callback?token={jwt}`
+6. Frontend `AuthCallback` component extracts token, stores it, fetches user data
+7. Updates `AuthContext` with user object
+8. User is now authenticated across all pages
+
+#### API Integration
+- **Axios Instance**: Configured with base URL and auth interceptors
+- **Request Interceptor**: Automatically adds `Authorization: Bearer {token}` header
+- **Response Interceptor**: Handles 401 errors and logs API errors
+- **Service Layer**: Separated services for auth and portfolio operations
 
 #### Routing
 - React Router DOM v7
-- Client-side navigation
-- Dynamic routes for portfolio slugs
+- Client-side navigation with `<Link>` components
+- Dynamic routes for portfolio slugs (`/portfolio/:slug`, `/refine/:slug`)
+- Protected routes that require authentication
+- Auth callback route for OAuth flow
 
 #### Styling
 - Tailwind CSS utility classes
-- Custom color schemes
-- Responsive breakpoints
-- Dark theme by default
+- Custom color schemes (indigo/slate palette)
+- Responsive breakpoints (sm, md, lg, xl)
+- Dark theme by default with glassmorphism effects
+- Gradient backgrounds and borders
 
 #### Animations
-- Framer Motion for page transitions
-- Spring animations for buttons
-- Smooth scroll with Lenis
+- Framer Motion for page transitions and micro-interactions
+- Spring animations for buttons and modals
+- Smooth scroll with Lenis library
+- Motion variants for staggered animations
+- Active state transitions (scale, opacity)
 
 ---
 
 ## Database Schema
+
+### Users Table
+
+```sql
+CREATE TABLE users (
+  id VARCHAR(36) PRIMARY KEY,
+  github_id VARCHAR(100) UNIQUE NOT NULL,
+  username VARCHAR(100) NOT NULL,
+  email VARCHAR(255),
+  avatar_url VARCHAR(255),
+  access_token VARCHAR(255),
+
+  -- Timestamps
+  created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX idx_users_github_id ON users(github_id);
+```
 
 ### Portfolios Table
 
 ```sql
 CREATE TABLE portfolios (
   id UUID PRIMARY KEY,
+  user_id VARCHAR(36) REFERENCES users(id) ON DELETE CASCADE,
   slug VARCHAR(255) UNIQUE NOT NULL,
   name VARCHAR(255) NOT NULL,
   portfolio_focus VARCHAR(50),
@@ -796,6 +999,7 @@ CREATE TABLE portfolios (
 
 CREATE INDEX idx_portfolios_slug ON portfolios(slug);
 CREATE INDEX idx_portfolios_status ON portfolios(status);
+CREATE INDEX idx_portfolios_user_id ON portfolios(user_id);
 ```
 
 ### Portfolio Versions Table
@@ -866,10 +1070,26 @@ npm run build
 
 **Backend (.env):**
 ```env
+# Database
 DATABASE_URL=postgresql+asyncpg://user:pass@host/db
-GITHUB_TOKEN=your_token
-GEMINI_API_KEY=your_key
-CORS_ORIGINS=https://yourdomain.com
+
+# GitHub OAuth (Production)
+GITHUB_CLIENT_ID=your_prod_github_client_id
+GITHUB_CLIENT_SECRET=your_prod_github_client_secret
+GITHUB_REDIRECT_URI=https://api.yourdomain.com/auth/callback
+FRONTEND_URL=https://yourdomain.com
+
+# API Keys
+GITHUB_TOKEN=your_github_personal_access_token
+GEMINI_API_KEY=your_gemini_api_key
+
+# Security
+JWT_SECRET=use-strong-random-secret-here-min-32-chars
+CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+
+# Optional
+HOST=0.0.0.0
+PORT=8000
 ```
 
 **Frontend (.env.production):**
@@ -877,26 +1097,91 @@ CORS_ORIGINS=https://yourdomain.com
 VITE_API_URL=https://api.yourdomain.com
 ```
 
+**Important Production Notes:**
+1. Create a **separate GitHub OAuth app** for production (don't use dev credentials)
+2. Use a **crypto-secure random string** for `JWT_SECRET` (minimum 32 characters)
+3. Set `GITHUB_REDIRECT_URI` to your production backend URL
+4. Set `FRONTEND_URL` to your production frontend URL
+5. Whitelist only your production domain(s) in `CORS_ORIGINS`
+6. Never commit production `.env` files to version control
+
 ---
 
 ## Security Notes
 
-### Current Limitations (Development)
-- **CORS**: Allows all origins (`*`) - restrict for production
-- **Authentication**: Not implemented - add JWT/OAuth for production
+### Current Implementation (Development)
+
+✅ **Implemented:**
+- **GitHub OAuth**: Secure user authentication via GitHub
+- **JWT Tokens**: Session management with Bearer token authentication
+- **Password-less Auth**: No passwords to manage or leak
+- **User Isolation**: Portfolios linked to user accounts
+- **Auth Interceptors**: Automatic token injection on API requests
+- **Session Restore**: Validates token on app load
+- **Token Expiration**: JWT tokens have expiration dates
+
+⚠️ **Development Limitations:**
+- **CORS**: Currently allows all origins (`*`) - must restrict for production
 - **API Keys**: Stored in `.env` file - use secrets manager for production
+- **JWT Secret**: Simple secret key - must use strong random key in production
 - **Rate Limiting**: Relies on external API limits - add middleware for production
 - **Input Validation**: Basic validation - enhance for production
+- **Token Storage**: localStorage (vulnerable to XSS) - consider httpOnly cookies for production
 
 ### Production Recommendations
-1. **Add Authentication**: JWT tokens for private coaching endpoint
-2. **Configure CORS**: Whitelist specific domains
-3. **Add Rate Limiting**: Prevent abuse
-4. **Use HTTPS**: Enable SSL/TLS
-5. **Secrets Management**: Use AWS Secrets Manager, Azure Key Vault, etc.
-6. **Input Sanitization**: Add comprehensive validation
-7. **Error Handling**: Don't expose internal errors to clients
-8. **Logging**: Add structured logging with sensitive data redaction
+
+1. **Configure CORS Properly**
+   ```python
+   CORS_ORIGINS = ["https://yourdomain.com", "https://www.yourdomain.com"]
+   ```
+
+2. **Secure JWT Tokens**
+   - Use strong random secret (32+ characters, generated with crypto-secure RNG)
+   - Set appropriate expiration times (e.g., 7 days)
+   - Consider refresh token rotation
+   - Use httpOnly cookies instead of localStorage
+
+3. **Secrets Management**
+   - Use AWS Secrets Manager, Azure Key Vault, or HashiCorp Vault
+   - Never commit `.env` to version control (already in `.gitignore`)
+   - Rotate secrets regularly
+
+4. **Add Rate Limiting**
+   - Use middleware like `slowapi` for FastAPI
+   - Limit login attempts, portfolio generation requests
+   - Implement IP-based and user-based limits
+
+5. **Use HTTPS**
+   - Enable SSL/TLS on backend and frontend
+   - Use Let's Encrypt for free SSL certificates
+   - Enforce HTTPS redirects
+
+6. **Enhanced Input Validation**
+   - Validate all file uploads (size, type, content)
+   - Sanitize user inputs to prevent injection attacks
+   - Validate portfolio slugs and IDs
+
+7. **Error Handling**
+   - Don't expose stack traces to clients in production
+   - Log errors securely without sensitive data
+   - Return generic error messages to users
+
+8. **Logging & Monitoring**
+   - Add structured logging with correlation IDs
+   - Redact sensitive data (tokens, emails) from logs
+   - Monitor failed authentication attempts
+   - Set up alerts for suspicious activity
+
+9. **API Security**
+   - Add request signing for sensitive operations
+   - Implement CSRF protection for state-changing requests
+   - Add content security policy (CSP) headers
+
+10. **GitHub OAuth Production Setup**
+    - Create separate OAuth app for production
+    - Use production callback URLs
+    - Limit OAuth scopes to minimum required
+    - Regularly rotate GitHub client secrets
 
 ---
 
@@ -970,15 +1255,43 @@ npm install
 ```
 
 **API Connection Issues:**
-- Check `VITE_API_URL` in frontend/.env
-- Verify backend is running
-- Check CORS configuration
+- Check `VITE_API_URL` in `frontend/.env`
+- Verify backend is running on port 8000
+- Check CORS configuration in backend
+- Open browser console to see network errors
 
 **Styling Issues:**
 ```bash
 # Rebuild Tailwind CSS
 npm run build
 ```
+
+### Authentication Issues
+
+**GitHub Sign-In Not Working:**
+1. Verify GitHub OAuth app is created at https://github.com/settings/developers
+2. Check that callback URL matches: `http://localhost:8000/auth/callback`
+3. Confirm `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` are set in `.env`
+4. Ensure `FRONTEND_URL=http://localhost:5173` in `.env`
+5. Check browser console for errors during OAuth redirect
+
+**401 Unauthorized Errors:**
+- Token may be expired or invalid
+- Clear browser localStorage: `localStorage.removeItem('token')`
+- Sign in again with GitHub
+- Check that backend JWT_SECRET is set in `.env`
+
+**User Session Not Persisting:**
+- Check browser localStorage for `token` key
+- Verify token is being sent in API requests (check Network tab)
+- Ensure `AuthProvider` wraps your app in `App.jsx`
+- Check that `useAuth` is being called within `AuthProvider`
+
+**OAuth Redirect Loop:**
+- Clear browser cache and cookies
+- Verify `FRONTEND_URL` and `GITHUB_REDIRECT_URI` match your actual URLs
+- Check that both backend and frontend are running on correct ports
+- Look for console errors during redirect
 
 ---
 
