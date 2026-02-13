@@ -45,6 +45,7 @@ class User(Base):
 
     # Relationships
     portfolios = relationship("Portfolio", back_populates="user")
+    chat_messages = relationship("ChatMessage", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User(username='{self.username}', github_id='{self.github_id}')>"
@@ -161,3 +162,37 @@ class PortfolioVersion(Base):
 
     def __repr__(self):
         return f"<PortfolioVersion(portfolio_id='{self.portfolio_id}', version={self.version_number})>"
+
+
+class ChatMessage(Base):
+    """Chat message table for AI career bot conversations"""
+    __tablename__ = "chat_messages"
+
+    # Primary key
+    id = Column(String(36), primary_key=True, default=get_uuid)
+
+    # Foreign key to user
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+
+    # Message content
+    role = Column(String(20), nullable=False)  # "user" or "assistant"
+    content = Column(Text, nullable=False)
+
+    # AI service metadata
+    ai_service = Column(String(50), nullable=True)  # "openrouter" or "gemini"
+    model_used = Column(String(100), nullable=True)  # e.g., "meta-llama/llama-3.1-70b-instruct"
+
+    # Timestamp
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    user = relationship("User", back_populates="chat_messages")
+
+    # Indexes for performance
+    __table_args__ = (
+        Index('idx_chat_user_id', 'user_id'),
+        Index('idx_chat_user_created', 'user_id', 'created_at'),
+    )
+
+    def __repr__(self):
+        return f"<ChatMessage(user_id='{self.user_id}', role='{self.role}', created_at='{self.created_at}')>"

@@ -18,7 +18,14 @@ export default function AuthCallback() {
             authService.getCurrentUser()
                 .then(userData => {
                     setUser(userData);
-                    navigate('/');
+                    // Check if there's a redirect destination
+                    const redirectTo = sessionStorage.getItem('redirectAfterLogin');
+                    if (redirectTo) {
+                        sessionStorage.removeItem('redirectAfterLogin');
+                        navigate(redirectTo);
+                    } else {
+                        navigate('/');
+                    }
                 })
                 .catch(err => {
                     console.error('Failed to authenticate:', err);

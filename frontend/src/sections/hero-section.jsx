@@ -1,10 +1,22 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, MessageSquare, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 import TiltedImage from "../components/tilt-image";
 
 export default function HeroSection() {
     const navigate = useNavigate();
+    const { user, login } = useAuth();
+
+    const handleCareerBotClick = () => {
+        if (user) {
+            navigate('/career-bot');
+        } else {
+            // Store intended destination
+            sessionStorage.setItem('redirectAfterLogin', '/career-bot');
+            login();
+        }
+    };
 
     return (
         <section className="flex flex-col items-center -mt-18">
@@ -47,7 +59,7 @@ export default function HeroSection() {
             >
                 Transform your resume, GitHub, and competitive programming profiles into a stunning portfolio powered by AI. Get personalized coaching insights and showcase your best work.
             </motion.p>
-            <motion.div className="flex items-center gap-4 mt-8"
+            <motion.div className="flex flex-col sm:flex-row items-center gap-4 mt-8"
                 initial={{ y: 50, opacity: 0 }}
                 whileInView={{ y: 0, opacity: 1 }}
                 viewport={{ once: true }}
@@ -61,6 +73,14 @@ export default function HeroSection() {
                     <ArrowRight className="size-5" />
                 </button>
 
+                <button
+                    onClick={handleCareerBotClick}
+                    className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition text-white active:scale-95 rounded-lg px-7 h-11 shadow-lg hover:shadow-xl"
+                >
+                    <MessageSquare className="size-5" />
+                    AI Career Coach
+                    <Sparkles className="size-4" />
+                </button>
             </motion.div>
             <TiltedImage />
         </section>

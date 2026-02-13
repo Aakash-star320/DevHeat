@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MenuIcon, XIcon, Github, LogOut, User as UserIcon, Briefcase } from "lucide-react";
+import { MenuIcon, XIcon, Github, LogOut, User as UserIcon, Briefcase, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -40,6 +40,16 @@ export default function Navbar() {
                         Generate Portfolio
                     </button>
 
+                    {user && (
+                        <button
+                            onClick={() => navigate('/career-bot')}
+                            className="flex items-center gap-2 px-6 py-2 bg-purple-600 hover:bg-purple-700 transition text-white rounded-md active:scale-95"
+                        >
+                            <MessageSquare className="size-4" />
+                            AI Career Coach
+                        </button>
+                    )}
+
                     {user ? (
                         <div className="relative">
                             <button
@@ -73,6 +83,14 @@ export default function Navbar() {
                                         <Briefcase className="size-4" />
                                         My Portfolios
                                     </Link>
+                                    <Link
+                                        to="/career-bot"
+                                        className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 flex items-center gap-2 transition"
+                                        onClick={() => setIsProfileOpen(false)}
+                                    >
+                                        <MessageSquare className="size-4" />
+                                        AI Career Coach
+                                    </Link>
                                     <button
                                         onClick={logout}
                                         className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-slate-800 flex items-center gap-2 transition"
@@ -104,9 +122,15 @@ export default function Navbar() {
                     </a>
                 ))}
                 {user && (
-                    <Link to="/my-portfolios" className="text-white hover:text-indigo-400 transition" onClick={() => setIsMenuOpen(false)}>
-                        My Portfolios
-                    </Link>
+                    <>
+                        <Link to="/my-portfolios" className="text-white hover:text-indigo-400 transition" onClick={() => setIsMenuOpen(false)}>
+                            My Portfolios
+                        </Link>
+                        <Link to="/career-bot" className="flex items-center gap-2 text-white hover:text-purple-400 transition" onClick={() => setIsMenuOpen(false)}>
+                            <MessageSquare className="size-5" />
+                            AI Career Coach
+                        </Link>
+                    </>
                 )}
                 <button onClick={() => setIsMenuOpen(false)} className="active:ring-3 active:ring-white aspect-square size-10 p-1 items-center justify-center bg-slate-100 hover:bg-slate-200 transition text-black rounded-md flex">
                     <XIcon />

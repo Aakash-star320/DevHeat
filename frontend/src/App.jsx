@@ -5,6 +5,7 @@ import RefinePortfolio from './pages/RefinePortfolio';
 import ViewPortfolio from './pages/ViewPortfolio';
 import MyPortfolios from './pages/MyPortfolios';
 import AuthCallback from './pages/AuthCallback';
+import CareerBot from './pages/CareerBot';
 import { AuthProvider } from './context/AuthContext';
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
                 <Route path="/my-portfolios" element={<MyPortfolios />} />
                 <Route path="/view/:slug" element={<ViewPortfolio />} />
                 <Route path="/refine/:slug" element={<RefinePortfolio />} />
+                <Route path="/career-bot" element={<CareerBot />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
             </Routes>
         </AuthProvider>

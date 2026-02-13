@@ -14,7 +14,8 @@ from app.routers import (
     portfolio_retrieval_router,
     portfolio_editing_router,
     portfolio_refinement_router,
-    auth_router
+    auth_router,
+    career_bot_router
 )
 from app.config import logger
 from app.database import init_db, close_db
@@ -85,6 +86,9 @@ app.include_router(portfolio_retrieval_router.router)  # GET endpoints (retrieve
 # app.include_router(portfolio_editing_router.router)  # PATCH/POST endpoints (edit/refine) - DEPRECATED: Use portfolio_refinement_router instead
 app.include_router(portfolio_refinement_router.router)  # AI-assisted refinement
 
+# AI Career Bot
+app.include_router(career_bot_router.router)  # AI career coaching chatbot
+
 logger.info("FastAPI application initialized with all routers")
 
 # Root endpoint removed - frontend will be served at / by the catch-all route
@@ -118,13 +122,19 @@ async def health_check():
                 "versions": "/portfolio/{slug}/versions",
                 "restore": "/portfolio/{slug}/versions/{version_id}/restore",
                 "slug_generator": "/portfolio/"
+            },
+            "career_bot": {
+                "chat": "/career-bot/chat",
+                "history": "/career-bot/history",
+                "clear_history": "/career-bot/history (DELETE)"
             }
         },
         "features": [
             "AI-powered portfolio generation",
             "Code quality analysis",
             "Multi-source data aggregation",
-            "Private coaching insights"
+            "Private coaching insights",
+            "AI career coaching chatbot"
         ]
     }
 

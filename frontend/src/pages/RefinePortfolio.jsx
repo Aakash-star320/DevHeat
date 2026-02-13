@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { MessageSquare, Sparkles } from 'lucide-react';
 import portfolioService from '../services/portfolioService';
 
 export default function RefinePortfolio() {
@@ -160,6 +161,33 @@ export default function RefinePortfolio() {
                         {portfolio?.personal_info?.name}'s Portfolio
                     </h1>
                     <p className="text-gray-400">Refine and manage your AI-generated portfolio</p>
+                </div>
+
+                {/* Career Bot Banner */}
+                <div className="mb-8 bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/30 rounded-xl p-6 backdrop-blur-sm">
+                    <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0">
+                            <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
+                                <MessageSquare className="w-6 h-6 text-white" />
+                            </div>
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="text-xl font-semibold text-white mb-2 flex items-center gap-2">
+                                <Sparkles className="w-5 h-5 text-yellow-400" />
+                                Portfolio Generated! Get Personalized Career Guidance
+                            </h3>
+                            <p className="text-gray-300 mb-4">
+                                Your portfolio is ready! Now chat with our AI Career Coach for personalized insights on your career path, skill development, and interview preparation based on your profile.
+                            </p>
+                            <button
+                                onClick={() => navigate('/career-bot')}
+                                className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
+                            >
+                                <MessageSquare className="w-5 h-5" />
+                                Talk to AI Career Coach
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
