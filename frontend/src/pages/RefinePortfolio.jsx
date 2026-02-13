@@ -709,11 +709,14 @@ export default function RefinePortfolio() {
                                     versions.map((version) => (
                                         <div
                                             key={version.id}
-                                            className="bg-gray-900/50 p-4 rounded-lg border border-gray-700"
+                                            className={`bg-gray-900/50 p-4 rounded-lg border ${selectedVersion?.id === version.id ? 'border-blue-500' : 'border-gray-700'}`}
                                         >
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="text-white font-medium">
                                                     Version {version.version_number}
+                                                    {selectedVersion?.id === version.id && (
+                                                        <span className="ml-2 text-xs bg-blue-600 px-2 py-0.5 rounded-full">Viewing</span>
+                                                    )}
                                                 </span>
                                             </div>
                                             <p className="text-gray-400 text-sm mb-3">
@@ -746,7 +749,7 @@ export default function RefinePortfolio() {
                             <h3 className="text-xl font-bold text-white mb-4">Quick Actions</h3>
                             <div className="space-y-3">
                                 <button
-                                    onClick={() => window.open(`/portfolio/${slug}`, '_blank')}
+                                    onClick={() => window.open(`/view/${slug}`, '_blank')}
                                     className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
                                 >
                                     View Public Portfolio

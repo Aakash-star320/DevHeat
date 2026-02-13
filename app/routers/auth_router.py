@@ -3,8 +3,6 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from fastapi.security import OAuth2PasswordBearer
-
 from app.database import get_db
 from app.models.database import User
 from app.config import (
@@ -15,6 +13,7 @@ from app.config import (
     logger
 )
 from app.utils.auth import create_access_token, verify_token
+from fastapi.security import OAuth2PasswordBearer
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -138,6 +137,9 @@ async def github_callback(code: str, db: AsyncSession = Depends(get_db)):
 
     # 4. Create JWT and redirect to frontend
     jwt_token = create_access_token(data={"sub": user.id})
+
+    # In production, this would redirect to the frontend with the token
+    # For now, we'll return the token or redirect to a frontend callback page
     callback_url = f"{FRONTEND_URL}/auth/callback"
     return RedirectResponse(f"{callback_url}?token={jwt_token}")
 

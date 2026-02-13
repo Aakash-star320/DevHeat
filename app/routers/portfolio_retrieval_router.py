@@ -11,8 +11,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.models.database import Portfolio
+from app.models.database import Portfolio, User
 from app.models.schemas import PortfolioStatusResponse
+from app.routers.auth_router import get_current_user
 
 logger = logging.getLogger(__name__)
 
@@ -310,6 +311,34 @@ async def list_portfolio_versions(
         "versions": version_list,
         "total_count": len(version_list)
     }
+
+
+@router.get("/me/all")
+async def get_my_portfolios(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Retrieve all portfolios belonging to the current user.
+    """
+    result = await db.execute(
+        select(Portfolio)
+        .where(Portfolio.user_id == current_user.id)
+        .order_by(Portfolio.created_at.desc())
+    )
+    portfolios = result.scalars().all()
+
+    return [
+        {
+            "id": p.id,
+            "slug": p.slug,
+            "name": p.name,
+            "portfolio_focus": p.portfolio_focus,
+            "status": p.status,
+            "created_at": p.created_at.isoformat() + "Z"
+        }
+        for p in portfolios
+    ]
 
 
 @router.get("/{slug}/versions/{version_id}", response_model=Dict[str, Any])

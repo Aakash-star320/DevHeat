@@ -13,7 +13,8 @@ from app.routers import (
     portfolio_generation_router,
     portfolio_retrieval_router,
     portfolio_editing_router,
-    portfolio_refinement_router
+    portfolio_refinement_router,
+    auth_router
 )
 from app.config import logger
 from app.database import init_db, close_db
@@ -66,6 +67,9 @@ if os.path.exists("frontend/dist"):
     app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="frontend-assets")
 
 # Register routers
+# Auth router
+app.include_router(auth_router.router)
+
 # Data extraction endpoints
 app.include_router(linkedin_router.router)
 app.include_router(resume_router.router)
