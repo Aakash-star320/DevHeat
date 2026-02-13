@@ -24,12 +24,13 @@ export const AuthProvider = ({ children }) => {
         initAuth();
     }, []);
 
-    const login = (token) => {
-        localStorage.setItem('token', token);
+    const login = () => {
+        // Redirect to GitHub OAuth
+        authService.login();
     };
 
     const logout = () => {
-        localStorage.removeItem('token');
+        authService.logout();
         setUser(null);
     };
 
