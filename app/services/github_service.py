@@ -14,14 +14,20 @@ load_dotenv()
 GITHUB_API_BASE = "https://api.github.com"
 
 
-def load_github_token() -> str:
-    """Load GitHub token from environment variables"""
+def load_github_token() -> Optional[str]:
+    """
+    Load GitHub token from environment variables.
+    Returns None if not configured so the app can still work with public
+    rate limits (60 requests/hour) and returns clearer guidance to the user.
+    """
     token = os.getenv("GITHUB_TOKEN")
-    if not token or token == "your_github_personal_access_token_here":
-        raise ValueError(
-            "GITHUB_TOKEN not configured. Please set a valid GitHub Personal Access Token in .env file"
-        )
-    return token
+    if token and token.strip() and token != "your_github_personal_access_token_here":
+        return token.strip()
+
+    logger.warning(
+        "GITHUB_TOKEN not set. Proceeding unauthenticated (limited to 60 requests/hour)."
+    )
+    return None
 
 
 def parse_github_url(url: str) -> Tuple[str, str]:
@@ -237,7 +243,7 @@ async def analyze_repository(repo_url: str) -> GitHubRepoAnalysis:
         ValueError: If URL is invalid or token is missing
         httpx.HTTPStatusError: If GitHub API returns error
     """
-    # Load token
+    # Load token (optional; unauthenticated requests are allowed but rate limited)
     token = load_github_token()
     
     # Parse URL
@@ -245,14 +251,24 @@ async def analyze_repository(repo_url: str) -> GitHubRepoAnalysis:
     
     # Setup HTTP client with authentication
     headers = {
-        "Authorization": f"Bearer {token}",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28"
     }
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
     
     async with httpx.AsyncClient(headers=headers, timeout=30.0) as client:
         # Fetch metadata
-        metadata = await get_repo_metadata(client, owner, repo)
+        try:
+            metadata = await get_repo_metadata(client, owner, repo)
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 403 and not token:
+                # Clear guidance when hitting unauthenticated rate limit
+                raise ValueError(
+                    "GitHub rate limit hit for unauthenticated requests. "
+                    "Add a personal access token in .env as GITHUB_TOKEN="
+                )
+            raise
         
         # Extract metadata fields
         name = metadata.get("name", "")

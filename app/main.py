@@ -8,6 +8,7 @@ from app.routers import (
     codeforces_router,
     github_router,
     leetcode_router,
+    auth_router,
     portfolio_router,
     portfolio_generation_router,
     portfolio_retrieval_router,
@@ -71,6 +72,7 @@ app.include_router(resume_router.router)
 app.include_router(codeforces_router.router)
 app.include_router(github_router.router)
 app.include_router(leetcode_router.router)
+app.include_router(auth_router.router)
 
 # Portfolio endpoints
 app.include_router(portfolio_router.router, prefix="/portfolio")  # Slug generation
