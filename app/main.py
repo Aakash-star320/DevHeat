@@ -135,6 +135,11 @@ if os.path.exists("frontend/dist"):
         """Serve the public portfolio view UI"""
         return FileResponse("frontend/dist/index.html")
     
+    @app.get("/display/{slug}")
+    async def serve_portfolio_display(slug: str):
+        """Serve the isolated portfolio display UI (MPA)"""
+        return FileResponse("frontend/dist/display.html")
+    
     @app.get("/{full_path:path}")
     async def serve_frontend(full_path: str):
         """Serve frontend for all other routes (must be last)"""
