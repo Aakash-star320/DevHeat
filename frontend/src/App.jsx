@@ -7,6 +7,8 @@ import MyPortfolios from './pages/MyPortfolios';
 import AuthCallback from './pages/AuthCallback';
 import { AuthProvider } from './context/AuthContext';
 
+
+
 export default function App() {
     return (
         <AuthProvider>

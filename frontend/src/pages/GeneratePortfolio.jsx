@@ -22,7 +22,10 @@ export default function GeneratePortfolio() {
         resume_file: null,
         github_repos: '',
         codeforces_username: '',
+        codeforces_username: '',
         leetcode_username: '',
+        linkedin_url: '',
+        github_profile_url: '',
     });
 
     const [userRepos, setUserRepos] = useState([]);
@@ -124,6 +127,12 @@ export default function GeneratePortfolio() {
             }
             if (formData.leetcode_username) {
                 data.append('leetcode_username', formData.leetcode_username);
+            }
+            if (formData.linkedin_url) {
+                data.append('linkedin_url', formData.linkedin_url);
+            }
+            if (formData.github_profile_url) {
+                data.append('github_profile_url', formData.github_profile_url);
             }
 
             const response = await portfolioService.generatePortfolio(data);
@@ -297,6 +306,19 @@ export default function GeneratePortfolio() {
                                     </div>
 
                                     <div>
+                                        <label className="block text-white font-medium mb-2">LinkedIn Profile URL</label>
+                                        <input
+                                            type="url"
+                                            name="linkedin_url"
+                                            value={formData.linkedin_url}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition"
+                                            placeholder="https://linkedin.com/in/username"
+                                        />
+                                        <p className="text-slate-500 text-sm mt-2">Optional: Link to your profile</p>
+                                    </div>
+
+                                    <div>
                                         <label className="block text-white font-medium mb-2">
                                             <Upload className="inline size-4 mr-2" />
                                             Resume (PDF/DOCX)
@@ -391,6 +413,19 @@ export default function GeneratePortfolio() {
                                         placeholder="https://github.com/username/repo1&#10;https://github.com/username/repo2"
                                     />
                                     <p className="text-slate-500 text-sm mt-2">Optional: One repository URL per line (max 5)</p>
+                                </div>
+
+                                <div className="mt-6">
+                                    <label className="block text-white font-medium mb-2">GitHub Profile URL</label>
+                                    <input
+                                        type="url"
+                                        name="github_profile_url"
+                                        value={formData.github_profile_url}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 bg-slate-800/50 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition"
+                                        placeholder="https://github.com/username"
+                                    />
+                                    <p className="text-slate-500 text-sm mt-2">Optional: Link to your GitHub profile</p>
                                 </div>
                             </div>
 
