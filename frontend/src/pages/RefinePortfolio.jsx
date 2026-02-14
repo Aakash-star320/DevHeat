@@ -81,9 +81,7 @@ export default function RefinePortfolio() {
     };
 
     const handleConfirm = async () => {
-        if (!confirm('Are you sure you want to confirm this version? This will become the new committed version.')) {
-            return;
-        }
+
 
         try {
             await portfolioService.confirmPortfolio(slug);
@@ -95,9 +93,7 @@ export default function RefinePortfolio() {
     };
 
     const handleRevert = async (versionId) => {
-        if (!confirm('Are you sure you want to revert to this version? All other versions will be deleted.')) {
-            return;
-        }
+
 
         try {
             await portfolioService.revertPortfolio(slug, versionId);
