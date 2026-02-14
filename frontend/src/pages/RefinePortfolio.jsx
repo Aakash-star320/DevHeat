@@ -52,7 +52,7 @@ export default function RefinePortfolio() {
             const coaching = await portfolioService.getCoaching(slug);
             setCoachingData(coaching);
         } catch (err) {
-            alert('Failed to load coaching insights: ' + (err.response?.data?.detail || err.message));
+            console.error('Failed to load coaching insights:', err);
         } finally {
             setLoadingCoaching(false);
         }
@@ -60,7 +60,7 @@ export default function RefinePortfolio() {
 
     const handleRefine = async () => {
         if (!refinementInstruction.trim()) {
-            alert('Please enter refinement instructions');
+            console.warn('Please enter refinement instructions');
             return;
         }
 
@@ -73,40 +73,36 @@ export default function RefinePortfolio() {
             setPortfolio(result.portfolio_json);
             setRefinementInstruction('');
             await loadVersions();
-            alert('Portfolio refined successfully! Review and confirm to save changes.');
+            // alert('Portfolio refined successfully! Review and confirm to save changes.');
         } catch (err) {
-            alert('Failed to refine portfolio: ' + (err.response?.data?.detail || err.message));
+            console.error('Failed to refine portfolio:', err);
         } finally {
             setRefining(false);
         }
     };
 
     const handleConfirm = async () => {
-        if (!confirm('Are you sure you want to confirm this version? This will become the new committed version.')) {
-            return;
-        }
+
 
         try {
             await portfolioService.confirmPortfolio(slug);
             await loadVersions();
-            alert('Portfolio confirmed successfully!');
+            // alert('Portfolio confirmed successfully!');
         } catch (err) {
-            alert('Failed to confirm portfolio: ' + (err.response?.data?.detail || err.message));
+            console.error('Failed to confirm portfolio:', err);
         }
     };
 
     const handleRevert = async (versionId) => {
-        if (!confirm('Are you sure you want to revert to this version? All other versions will be deleted.')) {
-            return;
-        }
+
 
         try {
             await portfolioService.revertPortfolio(slug, versionId);
             await loadPortfolio();
             await loadVersions();
-            alert('Portfolio reverted successfully!');
+            // alert('Portfolio reverted successfully!');
         } catch (err) {
-            alert('Failed to revert portfolio: ' + (err.response?.data?.detail || err.message));
+            console.error('Failed to revert portfolio:', err);
         }
     };
 
@@ -116,7 +112,7 @@ export default function RefinePortfolio() {
             setSelectedVersion(versionData);
             setPortfolio(versionData.portfolio_json);
         } catch (err) {
-            alert('Failed to load version: ' + (err.response?.data?.detail || err.message));
+            console.error('Failed to load version:', err);
         }
     };
 

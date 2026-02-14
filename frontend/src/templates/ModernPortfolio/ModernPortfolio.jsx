@@ -185,7 +185,7 @@ function ParticleBackground() {
     );
 }
 
-const ModernPortfolio = ({ portfolio }) => {
+const ModernPortfolio = ({ portfolio, slug }) => {
     const [expand, updateExpanded] = useState(false);
     const [navColour, updateNavbar] = useState(false);
 
@@ -225,7 +225,7 @@ const ModernPortfolio = ({ portfolio }) => {
                 style={{ ...styles.navbar, backgroundColor: navColour ? "#1b1a2e" : "transparent" }}
             >
                 <Container>
-                    <Navbar.Brand href="/" className="d-flex" style={{ textDecoration: "none" }}>
+                    <Navbar.Brand href={`/display/${slug}`} className="d-flex" style={{ textDecoration: "none" }}>
                         <span style={{ color: "#c770f0", fontWeight: "bold", fontSize: "1.5rem" }}>
                             {name.split(" ")[0] || "Pf."}
                         </span>
@@ -262,9 +262,6 @@ const ModernPortfolio = ({ portfolio }) => {
                             </Nav.Link>
                             <Nav.Link href="#skills" style={styles.navLink} onClick={() => updateExpanded(false)}>
                                 Skills
-                            </Nav.Link>
-                            <Nav.Link href="#resume" style={styles.navLink} onClick={() => updateExpanded(false)}>
-                                Resume
                             </Nav.Link>
                         </Nav>
                     </Navbar.Collapse>
