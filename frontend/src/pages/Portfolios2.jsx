@@ -49,7 +49,7 @@ const Portfolios2 = () => {
         <div className="soumyajit-portfolio">
             <Preloader load={load} />
             <div className="App" id={load ? "no-scroll" : "scroll"}>
-                <ModernPortfolio portfolio={portfolio} />
+                <ModernPortfolio portfolio={portfolio} slug={slug} />
             </div>
         </div>
     );
