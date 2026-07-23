@@ -19,13 +19,19 @@ export default function AboutOurApps() {
             title: "AI-Optimized Content",
             description: "Intelligent layout and content structuring to highlight your key strengths effectively.",
             image: "https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/aboutSection/puzzelEmoji.png",
-            className: "py-10 border-b border-slate-700 md:py-0 md:border-b-0 md:px-10"
+            className: "py-10 border-b border-slate-700 md:py-0 md:border-r lg:border-r-0 md:border-b-0 md:px-10"
+        },
+        {
+            title: "AI Career Coach",
+            description: "Get personalized career guidance, skill recommendations, and interview prep based on your profile.",
+            image: "https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/aboutSection/rocketEmoji.png",
+            className: "py-10 md:py-0 md:px-10"
         },
     ];
     return (
         <section className="flex flex-col items-center" id="about">
             <SectionTitle title="Why SmartFolio?" description="Create a stunning, professional portfolio in minutes with our AI-powered platform." />
-            <div className="relative max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 px-8 md:px-0 mt-18">
+            <div className="relative max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 px-8 md:px-0 mt-18">
                 {sectionData.map((data, index) => (
                     <motion.div key={data.title} className={data.className}
                         initial={{ y: 150, opacity: 0 }}

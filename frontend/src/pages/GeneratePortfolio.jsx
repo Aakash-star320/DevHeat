@@ -22,7 +22,6 @@ export default function GeneratePortfolio() {
         resume_file: null,
         github_repos: '',
         codeforces_username: '',
-        codeforces_username: '',
         leetcode_username: '',
         linkedin_url: '',
         github_profile_url: '',
