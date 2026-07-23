@@ -30,8 +30,7 @@
         "react-tsparticles": "^2.12.2",
         "tailwindcss": "^4.1.14",
         "tsparticles": "^3.9.1",
-        "typewriter-effect": "^2.22.0",
-        "video-react": "^0.16.0"
+        "typewriter-effect": "^2.22.0"
     },
     "devDependencies": {
         "@eslint/js": "^9.36.0",
