@@ -14,7 +14,8 @@ from app.routers import (
     portfolio_retrieval_router,
     portfolio_editing_router,
     portfolio_refinement_router,
-    career_bot_router
+    career_bot_router,
+    jd_match_router
 )
 from app.config import logger
 from app.database import init_db, close_db
@@ -86,6 +87,7 @@ app.include_router(portfolio_refinement_router.router)  # AI-assisted refinement
 
 # AI Career Bot
 app.include_router(career_bot_router.router)  # AI career coaching chatbot
+app.include_router(jd_match_router.router)  # Resume-only JD readiness report
 
 logger.info("FastAPI application initialized with all routers")
 

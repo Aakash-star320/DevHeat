@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
     ArrowUp,
     Bot,
@@ -6,6 +8,7 @@ import {
     ChevronLeft,
     ChevronRight,
     ClipboardCheck,
+    Copy,
     MessageSquare,
     Maximize2,
     Minimize2,
@@ -42,6 +45,7 @@ const CareerBotChat = () => {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [renamingId, setRenamingId] = useState(null);
     const [renameValue, setRenameValue] = useState('');
+    const [copiedMessageId, setCopiedMessageId] = useState(null);
     const messagesEndRef = useRef(null);
     const messageAreaRef = useRef(null);
     const inputRef = useRef(null);
@@ -214,6 +218,17 @@ const CareerBotChat = () => {
         event.preventDefault();
     };
 
+    const copyAssistantMessage = async (message) => {
+        try {
+            await navigator.clipboard.writeText(message.content);
+            setCopiedMessageId(message.id);
+            window.setTimeout(() => setCopiedMessageId(null), 1800);
+        } catch (copyError) {
+            console.error('Could not copy Career Coach response:', copyError);
+            setError('We could not copy that response. Please try again.');
+        }
+    };
+
     return (
         <section
             className={`coach-workspace ${isFullscreen ? 'is-fullscreen' : ''}`}
@@ -345,8 +360,22 @@ const CareerBotChat = () => {
                                     <div className="message-avatar">{message.role === 'assistant' ? <Sparkles size={15} /> : 'YOU'}</div>
                                     <div className="message-body">
                                         <div className="message-label">{message.role === 'assistant' ? 'CAREER COACH' : 'YOU'}</div>
-                                        <div className="message-bubble">{message.content}</div>
+                                        <div className={`message-bubble ${message.role === 'assistant' ? 'markdown-message' : ''}`}>
+                                            {message.role === 'assistant' ? (
+                                                <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+                                            ) : message.content}
+                                        </div>
                                         {message.ai_service && <div className="message-provider">Response by {message.ai_service}</div>}
+                                        {message.role === 'assistant' && (
+                                            <button
+                                                type="button"
+                                                className="copy-response-button"
+                                                onClick={() => copyAssistantMessage(message)}
+                                            >
+                                                {copiedMessageId === message.id ? <Check size={13} /> : <Copy size={13} />}
+                                                {copiedMessageId === message.id ? 'Copied' : 'Copy response'}
+                                            </button>
+                                        )}
                                     </div>
                                 </article>
                             ))}

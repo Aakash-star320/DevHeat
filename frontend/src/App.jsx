@@ -6,6 +6,7 @@ import ViewPortfolio from './pages/ViewPortfolio';
 import MyPortfolios from './pages/MyPortfolios';
 import AuthCallback from './pages/AuthCallback';
 import CareerBot from './pages/CareerBot';
+import JDReadiness from './pages/JDReadiness';
 import { AuthProvider } from './context/AuthContext';
 
 
@@ -20,6 +21,7 @@ export default function App() {
                 <Route path="/view/:slug" element={<ViewPortfolio />} />
                 <Route path="/refine/:slug" element={<RefinePortfolio />} />
                 <Route path="/career-bot" element={<CareerBot />} />
+                <Route path="/jd-readiness" element={<JDReadiness />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
             </Routes>
         </AuthProvider>

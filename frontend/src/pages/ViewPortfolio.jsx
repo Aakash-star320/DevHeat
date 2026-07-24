@@ -1,6 +1,52 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
+    Activity, ArrowDownRight, ArrowUpRight, Award, Check, ChevronRight, Code2,
+    Github, Linkedin, Mail, Menu, Sparkles,
+    Trophy, X,
+} from 'lucide-react';
 import portfolioService from '../services/portfolioService';
+import './ViewPortfolio.css';
+
+const asList = (value) => Array.isArray(value) ? value.filter(Boolean) : [];
+const niceFocus = (value) => value ? value.replace(/[-_]/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()) : 'Software';
+const compactValue = (value) => typeof value === 'number' ? value.toLocaleString() : value;
+
+function SectionHeading({ eyebrow, title, copy }) {
+    return (
+        <div className="folio-section-heading">
+            <span>{eyebrow}</span>
+            <h2>{title}</h2>
+            {copy && <p>{copy}</p>}
+        </div>
+    );
+}
+
+function ProjectCard({ project, index }) {
+    const isString = typeof project === 'string';
+    const name = isString ? `Selected project ${String(index + 1).padStart(2, '0')}` : (project.name || project.title || `Selected project ${String(index + 1).padStart(2, '0')}`);
+    const description = isString ? project : (project.description || project.summary || 'A focused software project built to solve a practical problem.');
+    const technologies = asList(project.technologies || project.tech_stack || project.skills);
+    const highlights = asList(project.highlights || project.impact || project.description_bullets);
+    const link = !isString && (project.github_url || project.url || project.link);
+
+    return (
+        <article className={`folio-project-card folio-project-${(index % 3) + 1}`}>
+            <div className="folio-project-topline">
+                <span>0{index + 1} / SELECTED WORK</span>
+                {link && <a href={link} target="_blank" rel="noreferrer" aria-label={`Open ${name}`}><ArrowUpRight size={18} /></a>}
+            </div>
+            <h3>{name}</h3>
+            <p>{description}</p>
+            {highlights.length > 0 && (
+                <ul className="folio-project-highlights">
+                    {highlights.slice(0, 3).map((highlight, highlightIndex) => <li key={highlightIndex}><Check size={13} />{highlight}</li>)}
+                </ul>
+            )}
+            {technologies.length > 0 && <div className="folio-tags">{technologies.slice(0, 6).map((tech, techIndex) => <span key={techIndex}>{tech}</span>)}</div>}
+        </article>
+    );
+}
 
 export default function ViewPortfolio() {
     const { slug } = useParams();
@@ -8,420 +54,171 @@ export default function ViewPortfolio() {
     const [loading, setLoading] = useState(true);
     const [portfolio, setPortfolio] = useState(null);
     const [error, setError] = useState(null);
+    const [menuOpen, setMenuOpen] = useState(false);
 
     useEffect(() => {
+        let active = true;
+        const loadPortfolio = async () => {
+            try {
+                setLoading(true);
+                const data = await portfolioService.getPortfolio(slug);
+                if (active) {
+                    setPortfolio(data);
+                    setError(null);
+                }
+            } catch (requestError) {
+                console.error(requestError);
+                if (active) setError('This portfolio is not available.');
+            } finally {
+                if (active) setLoading(false);
+            }
+        };
         loadPortfolio();
+        return () => { active = false; };
     }, [slug]);
 
-    const loadPortfolio = async () => {
-        try {
-            setLoading(true);
-            const data = await portfolioService.getPortfolio(slug);
-            setPortfolio(data);
-            setError(null);
-        } catch (err) {
-            setError('Portfolio not found');
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const view = useMemo(() => {
+        const content = portfolio?.ai_generated_content || {};
+        const source = portfolio?.data_sources || {};
+        const skillsSummary = content.skills_summary || {};
+        const highlightedProjects = asList(content.project_highlights);
+        const githubProjects = asList(source.github_projects);
+        const projects = highlightedProjects.length ? highlightedProjects : githubProjects;
+        const competitive = source.competitive_programming || {};
+        const contact = content.contact_info || {};
+        const name = portfolio?.personal_info?.name || 'Portfolio owner';
+        const initial = name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase() || 'PF';
+        const skillGroups = [
+            { label: 'Languages', values: asList(skillsSummary.languages) },
+            { label: 'Frameworks', values: asList(skillsSummary.frameworks) },
+            { label: 'Tools & platforms', values: asList(skillsSummary.tools) },
+        ].filter((group) => group.values.length);
+        if (!skillGroups.length && asList(content.skills).length) skillGroups.push({ label: 'Core stack', values: asList(content.skills) });
+        const stats = [];
+        if (competitive.codeforces?.current_rating) stats.push({ label: 'Codeforces rating', value: compactValue(competitive.codeforces.current_rating), tone: 'violet' });
+        if (competitive.leetcode?.total_solved) stats.push({ label: 'LeetCode solved', value: compactValue(competitive.leetcode.total_solved), tone: 'gold' });
+        if (asList(content.achievements).length) stats.push({ label: 'Notable achievements', value: asList(content.achievements).length, tone: 'mint' });
+        return { content, source, projects, competitive, contact, name, initial, skillGroups, stats };
+    }, [portfolio]);
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center">
-                <div className="text-white text-xl">Loading portfolio...</div>
-            </div>
-        );
+        return <div className="folio-loading"><div className="folio-loader-mark">S</div><p>Loading the portfolio</p></div>;
+    }
+    if (error || !portfolio) {
+        return <div className="folio-loading"><div className="folio-loader-mark is-error">!</div><h1>{error || 'Portfolio unavailable'}</h1><button onClick={() => navigate('/')}>Return home <ArrowUpRight size={16} /></button></div>;
     }
 
-    if (error || !portfolio) {
-        return (
-            <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="text-red-400 text-xl mb-4">{error || 'Portfolio not found'}</div>
-                    <button
-                        onClick={() => navigate('/')}
-                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
-                    >
-                        Back to Home
-                    </button>
-                </div>
-            </div>
-        );
-    }
+    const { content, projects, competitive, contact, name, initial, skillGroups, stats } = view;
+    const focus = niceFocus(portfolio.personal_info?.portfolio_focus);
+    const navItems = [['Work', '#work'], ['Story', '#story'], ['Stack', '#stack'], ['Contact', '#contact']];
+    const profileLinks = [
+        contact.github && { icon: <Github size={16} />, label: 'GitHub', href: contact.github },
+        contact.linkedin && { icon: <Linkedin size={16} />, label: 'LinkedIn', href: contact.linkedin },
+    ].filter(Boolean);
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 py-16 px-6 md:px-16 lg:px-24 xl:px-32">
-            <div className="max-w-5xl mx-auto">
-                {/* Header */}
-                <div className="text-center mb-12">
-                    <h1 className="text-5xl font-bold text-white mb-4">
-                        {portfolio?.personal_info?.name || 'Professional Portfolio'}
-                    </h1>
-                    <p className="text-gray-400 text-lg">
-                        {portfolio?.personal_info?.portfolio_focus
-                            ? `${portfolio.personal_info.portfolio_focus.charAt(0).toUpperCase() + portfolio.personal_info.portfolio_focus.slice(1)} Developer`
-                            : 'Software Developer'}
-                    </p>
+        <div className="folio-page">
+            <div className="folio-grain" />
+            <div className="folio-orb folio-orb-one" />
+            <div className="folio-orb folio-orb-two" />
 
-                </div>
+            <header className="folio-nav-shell">
+                <nav className="folio-nav">
+                    <a className="folio-brand" href="#top" aria-label={`${name} portfolio home`}>
+                        <span>{initial}</span><b>{name.split(' ')[0]}<i>.</i></b>
+                    </a>
+                    <div className={`folio-nav-links ${menuOpen ? 'is-open' : ''}`}>
+                        {navItems.map(([label, href]) => <a key={label} href={href} onClick={() => setMenuOpen(false)}>{label}</a>)}
+                    </div>
+                    <a className="folio-nav-cta" href="#contact">Let&apos;s connect <ArrowUpRight size={15} /></a>
+                    <button className="folio-menu-button" onClick={() => setMenuOpen((open) => !open)} aria-label="Toggle navigation">
+                        {menuOpen ? <X size={20} /> : <Menu size={20} />}
+                    </button>
+                </nav>
+            </header>
 
-                {/* Content */}
-                <div className="bg-gray-800/50 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-gray-700 space-y-8">
-                    {/* Professional Summary */}
-                    {portfolio?.ai_generated_content?.professional_summary && (
-                        <section>
-                            <h2 className="text-3xl font-bold text-white mb-4 pb-2 border-b border-gray-700">
-                                About Me
-                            </h2>
-                            <p className="text-gray-300 text-lg leading-relaxed">
-                                {portfolio.ai_generated_content.professional_summary}
-                            </p>
-                        </section>
-                    )}
+            <main id="top" className="folio-main">
+                <section className="folio-hero">
+                    <div className="folio-hero-copy">
+                        <div className="folio-availability"><span /> Available for meaningful work</div>
+                        <p className="folio-hero-kicker">{focus.toUpperCase()} DEVELOPER · BUILDER · PROBLEM SOLVER</p>
+                        <h1>{name.split(' ').map((part, index) => <span key={`${part}-${index}`}>{part}</span>)}</h1>
+                        <p className="folio-hero-summary">{content.professional_summary || `I build thoughtful ${focus.toLowerCase()} experiences with an eye for clarity, technical depth, and real-world impact.`}</p>
+                        <div className="folio-hero-actions">
+                            <a href="#work" className="folio-primary-action">Explore selected work <ArrowDownRight size={18} /></a>
+                            {contact.email && <a href={`mailto:${contact.email}`} className="folio-quiet-action"><Mail size={16} /> Write an email</a>}
+                        </div>
+                    </div>
+                    <div className="folio-hero-art" aria-hidden="true">
+                        <div className="folio-monogram"><span>{initial}</span><i>01</i></div>
+                        <div className="folio-art-card folio-art-card-top"><Sparkles size={15} /><span>Building with intent</span></div>
+                        <div className="folio-art-card folio-art-card-bottom"><Activity size={15} /><span>Always learning</span></div>
+                        <div className="folio-art-ring folio-art-ring-one" /><div className="folio-art-ring folio-art-ring-two" />
+                    </div>
+                </section>
 
-                    {/* Key Strengths */}
-                    {portfolio?.ai_generated_content?.key_strengths?.length > 0 && (
-                        <section>
-                            <h2 className="text-3xl font-bold text-white mb-4 pb-2 border-b border-gray-700">
-                                Key Strengths
-                            </h2>
-                            <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {portfolio.ai_generated_content.key_strengths.map((strength, idx) => (
-                                    <li key={idx} className="flex items-start bg-gray-900/50 p-4 rounded-lg">
-                                        <span className="text-blue-500 mr-3 text-xl">✓</span>
-                                        <span className="text-gray-300">{strength}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </section>
-                    )}
+                {(content.key_strengths?.length > 0 || stats.length > 0) && (
+                    <section className="folio-proof-strip">
+                        <div className="folio-proof-intro"><span>AT A GLANCE</span><p>Signals of craft,<br />curiosity, and impact.</p></div>
+                        <div className="folio-proof-list">
+                            {asList(content.key_strengths).slice(0, 3).map((strength, index) => <div className="folio-proof-item" key={index}><b>0{index + 1}</b><p>{strength}</p></div>)}
+                            {!content.key_strengths?.length && <div className="folio-proof-item"><b>01</b><p>Focused on purposeful software and measurable outcomes.</p></div>}
+                        </div>
+                    </section>
+                )}
 
-                    {/* Skills */}
-                    {portfolio?.ai_generated_content?.skills?.length > 0 && (
-                        <section>
-                            <h2 className="text-3xl font-bold text-white mb-4 pb-2 border-b border-gray-700">
-                                Technical Skills
-                            </h2>
-                            <div className="flex flex-wrap gap-3">
-                                {portfolio.ai_generated_content.skills.map((skill, idx) => (
-                                    <span
-                                        key={idx}
-                                        className="px-5 py-2.5 bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/50 rounded-full text-blue-300 font-medium hover:scale-105 transition"
-                                    >
-                                        {skill}
-                                    </span>
-                                ))}
-                            </div>
-                        </section>
-                    )}
+                {projects.length > 0 && (
+                    <section id="work" className="folio-section folio-work-section">
+                        <SectionHeading eyebrow="SELECTED WORK" title="A few things worth opening." copy="Projects shaped around practical problems, deliberate systems, and details that hold up." />
+                        <div className="folio-project-grid">{projects.slice(0, 6).map((project, index) => <ProjectCard key={index} project={project} index={index} />)}</div>
+                    </section>
+                )}
 
-                    {/* Work Experience */}
-                    {portfolio?.ai_generated_content?.work_experience?.length > 0 && (
-                        <section>
-                            <h2 className="text-3xl font-bold text-white mb-4 pb-2 border-b border-gray-700">
-                                Work Experience
-                            </h2>
-                            <div className="space-y-6">
-                                {portfolio.ai_generated_content.work_experience.map((exp, idx) => (
-                                    <div key={idx} className="bg-gray-900/50 p-6 rounded-xl border border-gray-700">
-                                        <div className="flex justify-between items-start mb-3">
-                                            <div>
-                                                <h3 className="text-xl font-semibold text-white">{exp.title}</h3>
-                                                <p className="text-blue-400">{exp.company}</p>
-                                            </div>
-                                            <span className="text-gray-400 text-sm">{exp.duration}</span>
-                                        </div>
-                                        {exp.description_bullets && (
-                                            <ul className="space-y-2 mt-4">
-                                                {exp.description_bullets.map((bullet, bIdx) => (
-                                                    <li key={bIdx} className="flex items-start text-gray-300">
-                                                        <span className="text-blue-500 mr-2">•</span>
-                                                        {bullet}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    )}
-
-                    {/* Project Highlights */}
-                    {portfolio?.ai_generated_content?.project_highlights?.length > 0 && (
-                        <section>
-                            <h2 className="text-3xl font-bold text-white mb-4 pb-2 border-b border-gray-700">
-                                Featured Projects
-                            </h2>
-                            <div className="space-y-6">
-                                {portfolio.ai_generated_content.project_highlights.map((project, idx) => (
-                                    <div key={idx} className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 p-6 rounded-xl border border-gray-700 hover:border-blue-500/50 transition">
-                                        <h3 className="text-2xl font-semibold text-white mb-3">
-                                            {project.name || project.title || `Project ${idx + 1}`}
-                                        </h3>
-                                        <p className="text-gray-400 leading-relaxed mb-4">
-                                            {project.description || project}
-                                        </p>
-                                        {project.technologies && (
-                                            <div className="flex flex-wrap gap-2 mb-3">
-                                                {project.technologies.map((tech, tIdx) => (
-                                                    <span key={tIdx} className="px-3 py-1 bg-purple-600/20 border border-purple-500/30 rounded-full text-purple-300 text-sm">
-                                                        {tech}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
-                                        {project.highlights && (
-                                            <ul className="space-y-1 mt-3">
-                                                {project.highlights.map((highlight, hIdx) => (
-                                                    <li key={hIdx} className="flex items-start text-gray-400 text-sm">
-                                                        <span className="text-green-500 mr-2">✓</span>
-                                                        {highlight}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    )}
-
-                    {/* Achievements */}
-                    {portfolio?.ai_generated_content?.achievements?.length > 0 && (
-                        <section>
-                            <h2 className="text-3xl font-bold text-white mb-4 pb-2 border-b border-gray-700">
-                                Achievements
-                            </h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {portfolio.ai_generated_content.achievements.map((achievement, idx) => (
-                                    <div key={idx} className="bg-gradient-to-br from-yellow-900/10 to-yellow-800/10 p-4 rounded-lg border border-yellow-500/20">
-                                        <div className="flex items-start">
-                                            <span className="text-yellow-500 mr-3 text-2xl">🏆</span>
-                                            <p className="text-gray-300">{achievement}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    )}
-
-                    {/* Skills Summary */}
-                    {portfolio?.ai_generated_content?.skills_summary && (
-                        <section>
-                            <h2 className="text-3xl font-bold text-white mb-4 pb-2 border-b border-gray-700">
-                                Skills & Technologies
-                            </h2>
-                            <div className="space-y-6">
-                                {portfolio.ai_generated_content.skills_summary.languages && (
-                                    <div>
-                                        <h3 className="text-xl font-semibold text-white mb-3">Languages</h3>
-                                        <div className="flex flex-wrap gap-2">
-                                            {portfolio.ai_generated_content.skills_summary.languages.map((lang, idx) => (
-                                                <span key={idx} className="px-4 py-2 bg-blue-600/20 border border-blue-500/50 rounded-lg text-blue-300">
-                                                    {lang}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                                {portfolio.ai_generated_content.skills_summary.frameworks && (
-                                    <div>
-                                        <h3 className="text-xl font-semibold text-white mb-3">Frameworks & Libraries</h3>
-                                        <div className="flex flex-wrap gap-2">
-                                            {portfolio.ai_generated_content.skills_summary.frameworks.map((framework, idx) => (
-                                                <span key={idx} className="px-4 py-2 bg-purple-600/20 border border-purple-500/50 rounded-lg text-purple-300">
-                                                    {framework}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                                {portfolio.ai_generated_content.skills_summary.tools && (
-                                    <div>
-                                        <h3 className="text-xl font-semibold text-white mb-3">Tools & Technologies</h3>
-                                        <div className="flex flex-wrap gap-2">
-                                            {portfolio.ai_generated_content.skills_summary.tools.map((tool, idx) => (
-                                                <span key={idx} className="px-4 py-2 bg-green-600/20 border border-green-500/50 rounded-lg text-green-300">
-                                                    {tool}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </section>
-                    )}
-
-                    {/* Projects */}
-                    {portfolio?.data_sources?.github_projects?.length > 0 && (
-                        <section>
-                            <h2 className="text-3xl font-bold text-white mb-4 pb-2 border-b border-gray-700">
-                                Projects
-                            </h2>
-                            <div className="grid grid-cols-1 gap-4">
-                                {portfolio.data_sources.github_projects.map((project, idx) => (
-                                    <div key={idx} className="bg-gray-900/50 p-5 rounded-lg border border-gray-700">
-                                        <div className="flex items-start justify-between mb-2">
-                                            <h3 className="text-xl font-semibold text-white">
-                                                {project.name}
-                                            </h3>
-                                            {project.language && (
-                                                <span className="px-3 py-1 bg-purple-600/20 border border-purple-500/50 rounded-full text-purple-300 text-sm">
-                                                    {project.language}
-                                                </span>
-                                            )}
-                                        </div>
-                                        {project.description && project.description.trim() && (
-                                            <p className="text-gray-400 mb-3">{project.description}</p>
-                                        )}
-                                        {project.github_url && (
-                                            <a
-                                                href={project.github_url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-blue-400 hover:text-blue-300 text-sm mb-3 inline-block"
-                                            >
-                                                View on GitHub →
-                                            </a>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    )}
-
-                    {/* Competitive Programming */}
-                    {portfolio?.data_sources?.competitive_programming && (
-                        <section>
-                            <h2 className="text-3xl font-bold text-white mb-4 pb-2 border-b border-gray-700">
-                                Competitive Programming
-                            </h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {portfolio.data_sources.competitive_programming.codeforces && (
-                                    <div className="bg-gradient-to-br from-orange-900/20 to-orange-800/20 p-6 rounded-xl border border-orange-500/30">
-                                        <h3 className="text-xl font-semibold text-white mb-4">Codeforces</h3>
-                                        <div className="space-y-2 text-gray-300">
-                                            <p><span className="text-gray-400">Username:</span> {portfolio.data_sources.competitive_programming.codeforces.username}</p>
-                                            <p><span className="text-gray-400">Rating:</span> <span className="text-orange-400 font-bold text-2xl">{portfolio.data_sources.competitive_programming.codeforces.current_rating}</span></p>
-                                            <p><span className="text-gray-400">Max Rating:</span> {portfolio.data_sources.competitive_programming.codeforces.max_rating}</p>
-                                            <p><span className="text-gray-400">Rank:</span> <span className="capitalize">{portfolio.data_sources.competitive_programming.codeforces.rank}</span></p>
-                                            <p><span className="text-gray-400">Contests:</span> {portfolio.data_sources.competitive_programming.codeforces.contest_count}</p>
-                                            <p><span className="text-gray-400">Problems Solved:</span> {portfolio.data_sources.competitive_programming.codeforces.problems_solved}</p>
-                                            <a
-                                                href={`https://codeforces.com/profile/${portfolio.data_sources.competitive_programming.codeforces.username}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-orange-400 hover:text-orange-300 inline-block mt-2"
-                                            >
-                                                View Profile →
-                                            </a>
-                                        </div>
-                                    </div>
-                                )}
-                                {portfolio.data_sources.competitive_programming.leetcode && (
-                                    <div className="bg-gradient-to-br from-yellow-900/20 to-yellow-800/20 p-6 rounded-xl border border-yellow-500/30">
-                                        <h3 className="text-xl font-semibold text-white mb-4">LeetCode</h3>
-                                        <div className="space-y-2 text-gray-300">
-                                            <p><span className="text-gray-400">Username:</span> {portfolio.data_sources.competitive_programming.leetcode.username}</p>
-                                            <p><span className="text-gray-400">Total Solved:</span> <span className="text-yellow-400 font-bold text-2xl">{portfolio.data_sources.competitive_programming.leetcode.total_solved}</span></p>
-                                            <p><span className="text-gray-400">Easy:</span> {portfolio.data_sources.competitive_programming.leetcode.breakdown.easy}</p>
-                                            <p><span className="text-gray-400">Medium:</span> {portfolio.data_sources.competitive_programming.leetcode.breakdown.medium}</p>
-                                            <p><span className="text-gray-400">Hard:</span> {portfolio.data_sources.competitive_programming.leetcode.breakdown.hard}</p>
-                                            {portfolio.data_sources.competitive_programming.leetcode.profile_url && (
-                                                <a
-                                                    href={portfolio.data_sources.competitive_programming.leetcode.profile_url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-yellow-400 hover:text-yellow-300 inline-block mt-2"
-                                                >
-                                                    View Profile →
-                                                </a>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </section>
-                    )}
-
-                    {/* Code Quality Metrics */}
-                    {portfolio?.code_quality_metrics && (
-                        <section>
-                            <h2 className="text-3xl font-bold text-white mb-4 pb-2 border-b border-gray-700">
-                                Code Quality
-                            </h2>
-                            <div className="bg-gray-900/50 p-6 rounded-xl border border-gray-700">
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                    {Object.entries(portfolio.code_quality_metrics).map(([key, value]) => (
-                                        <div key={key} className="text-center">
-                                            <div className="text-3xl font-bold text-blue-400 mb-2">
-                                                {typeof value === 'number' ? value.toFixed(1) : value}
-                                            </div>
-                                            <div className="text-gray-400 text-sm capitalize">
-                                                {key.replace(/_/g, ' ')}
-                                            </div>
-                                        </div>
-                                    ))}
+                <section id="story" className="folio-section folio-story-layout">
+                    <div className="folio-story-sticky"><SectionHeading eyebrow="THE STORY" title="Built through real iteration." copy="The best work is usually the result of learning quickly, then making the next version more useful." />
+                        {profileLinks.length > 0 && <div className="folio-social-line">{profileLinks.map(({ icon, label, href }) => <a key={label} href={href} target="_blank" rel="noreferrer">{icon}{label}<ArrowUpRight size={13} /></a>)}</div>}
+                    </div>
+                    <div className="folio-timeline">
+                        {asList(content.work_experience).length ? asList(content.work_experience).map((experience, index) => (
+                            <article className="folio-timeline-entry" key={index}>
+                                <div className="folio-timeline-index">0{index + 1}</div>
+                                <div><span>{experience.duration || 'EXPERIENCE'}</span><h3>{experience.title || 'Software builder'}</h3><h4>{experience.company || 'Independent work'}</h4>
+                                    {asList(experience.description_bullets).length > 0 && <ul>{asList(experience.description_bullets).slice(0, 4).map((bullet, bulletIndex) => <li key={bulletIndex}>{bullet}</li>)}</ul>}
                                 </div>
-                            </div>
-                        </section>
-                    )}
+                            </article>
+                        )) : <article className="folio-timeline-entry"><div className="folio-timeline-index">01</div><div><span>NOW</span><h3>Building, learning, refining.</h3><p>Turning technical curiosity into useful, considered software.</p></div></article>}
+                    </div>
+                </section>
 
-                    {/* Contact Info */}
-                    {portfolio?.ai_generated_content?.contact_info && (
-                        <section>
-                            <h2 className="text-3xl font-bold text-white mb-4 pb-2 border-b border-gray-700">
-                                Get in Touch
-                            </h2>
-                            <div className="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 p-6 rounded-xl border border-indigo-500/30">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                                    {portfolio.ai_generated_content.contact_info.email && (
-                                        <a
-                                            href={`mailto:${portfolio.ai_generated_content.contact_info.email}`}
-                                            className="flex flex-col items-center justify-center p-4 bg-gray-900/50 rounded-lg hover:bg-gray-900/70 transition"
-                                        >
-                                            <span className="text-2xl mb-2">📧</span>
-                                            <span className="text-gray-400 text-sm mb-1">Email</span>
-                                            <span className="text-blue-400">{portfolio.ai_generated_content.contact_info.email}</span>
-                                        </a>
-                                    )}
-                                    {portfolio.ai_generated_content.contact_info.linkedin && (
-                                        <a
-                                            href={portfolio.ai_generated_content.contact_info.linkedin}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex flex-col items-center justify-center p-4 bg-gray-900/50 rounded-lg hover:bg-gray-900/70 transition"
-                                        >
-                                            <span className="text-2xl mb-2">💼</span>
-                                            <span className="text-gray-400 text-sm mb-1">LinkedIn</span>
-                                            <span className="text-blue-400">View Profile</span>
-                                        </a>
-                                    )}
-                                    {portfolio.ai_generated_content.contact_info.github && (
-                                        <a
-                                            href={portfolio.ai_generated_content.contact_info.github}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex flex-col items-center justify-center p-4 bg-gray-900/50 rounded-lg hover:bg-gray-900/70 transition"
-                                        >
-                                            <span className="text-2xl mb-2">💻</span>
-                                            <span className="text-gray-400 text-sm mb-1">GitHub</span>
-                                            <span className="text-blue-400">View Repositories</span>
-                                        </a>
-                                    )}
-                                </div>
-                            </div>
-                        </section>
-                    )}
-                </div>
+                {skillGroups.length > 0 && (
+                    <section id="stack" className="folio-section folio-stack-section">
+                        <SectionHeading eyebrow="TECHNICAL PALETTE" title="Tools chosen to make ideas real." />
+                        <div className="folio-skill-grid">{skillGroups.map((group, index) => <article className="folio-skill-card" key={group.label}><span>0{index + 1} / {group.label}</span><div>{group.values.map((skill, skillIndex) => <b key={skillIndex}>{skill}</b>)}</div></article>)}</div>
+                    </section>
+                )}
 
-                {/* Footer */}
-                <div className="text-center mt-12 text-gray-500">
-                </div>
-            </div>
+                {(asList(content.achievements).length > 0 || stats.length > 0 || competitive.codeforces || competitive.leetcode) && (
+                    <section className="folio-section folio-recognition-layout">
+                        <div className="folio-recognition-panel"><SectionHeading eyebrow="PROOF OF WORK" title="The details behind the momentum." />
+                            <div className="folio-achievement-list">{asList(content.achievements).slice(0, 5).map((achievement, index) => <div key={index}><Trophy size={16} /><p>{achievement}</p></div>)}</div>
+                        </div>
+                        <div className="folio-stat-grid">
+                            {stats.map((stat) => <div className={`folio-stat-card ${stat.tone}`} key={stat.label}><span>{stat.label}</span><strong>{stat.value}</strong><i /> </div>)}
+                            {competitive.codeforces?.profile_url && <a className="folio-profile-link" href={competitive.codeforces.profile_url} target="_blank" rel="noreferrer"><Code2 size={18} /> Explore Codeforces <ArrowUpRight size={16} /></a>}
+                            {competitive.leetcode?.profile_url && <a className="folio-profile-link" href={competitive.leetcode.profile_url} target="_blank" rel="noreferrer"><Award size={18} /> Explore LeetCode <ArrowUpRight size={16} /></a>}
+                        </div>
+                    </section>
+                )}
+
+                <section id="contact" className="folio-contact-section">
+                    <div><span>START A CONVERSATION</span><h2>Have a problem worth<br /><em>building for?</em></h2></div>
+                    <div className="folio-contact-actions">
+                        {contact.email ? <a className="folio-contact-main" href={`mailto:${contact.email}`}>{contact.email}<ArrowUpRight size={19} /></a> : <a className="folio-contact-main" href={contact.github || '#top'}>Find me online<ArrowUpRight size={19} /></a>}
+                        <p>Open to thoughtful collaborations, ambitious products, and the next difficult problem.</p>
+                    </div>
+                </section>
+            </main>
+            <footer className="folio-footer"><span>© {new Date().getFullYear()} {name}</span><span>Designed with intent <ChevronRight size={13} /> Powered by SmartFolio</span></footer>
         </div>
     );
 }

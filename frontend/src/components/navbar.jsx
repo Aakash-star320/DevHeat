@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MenuIcon, XIcon, Github, LogOut, User as UserIcon, Briefcase, MessageSquare } from "lucide-react";
+import { MenuIcon, XIcon, Github, LogOut, User as UserIcon, Briefcase, FileSearch, MessageSquare } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -39,6 +39,16 @@ export default function Navbar() {
                     >
                         Generate Portfolio
                     </button>
+
+                    {user && (
+                        <button
+                            onClick={() => navigate('/jd-readiness')}
+                            className="flex items-center gap-2 px-4 py-2 border border-cyan-300/30 bg-cyan-300/8 hover:bg-cyan-300/14 transition text-cyan-100 rounded-md active:scale-95"
+                        >
+                            <FileSearch className="size-4" />
+                            JD Readiness
+                        </button>
+                    )}
 
                     {user && (
                         <button
@@ -91,6 +101,14 @@ export default function Navbar() {
                                         <MessageSquare className="size-4" />
                                         AI Career Coach
                                     </Link>
+                                    <Link
+                                        to="/jd-readiness"
+                                        className="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 flex items-center gap-2 transition"
+                                        onClick={() => setIsProfileOpen(false)}
+                                    >
+                                        <FileSearch className="size-4" />
+                                        JD Readiness
+                                    </Link>
                                     <button
                                         onClick={logout}
                                         className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-slate-800 flex items-center gap-2 transition"
@@ -129,6 +147,10 @@ export default function Navbar() {
                         <Link to="/career-bot" className="flex items-center gap-2 text-white hover:text-purple-400 transition" onClick={() => setIsMenuOpen(false)}>
                             <MessageSquare className="size-5" />
                             AI Career Coach
+                        </Link>
+                        <Link to="/jd-readiness" className="flex items-center gap-2 text-white hover:text-cyan-300 transition" onClick={() => setIsMenuOpen(false)}>
+                            <FileSearch className="size-5" />
+                            JD Readiness
                         </Link>
                     </>
                 )}

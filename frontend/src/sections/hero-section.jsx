@@ -1,4 +1,4 @@
-import { ArrowRight, MessageSquare, Sparkles } from "lucide-react";
+import { ArrowRight, FileSearch, MessageSquare, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -14,6 +14,15 @@ export default function HeroSection() {
         } else {
             // Store intended destination
             sessionStorage.setItem('redirectAfterLogin', '/career-bot');
+            login();
+        }
+    };
+
+    const handleJDReadinessClick = () => {
+        if (user) {
+            navigate('/jd-readiness');
+        } else {
+            sessionStorage.setItem('redirectAfterLogin', '/jd-readiness');
             login();
         }
     };
@@ -80,6 +89,13 @@ export default function HeroSection() {
                     <MessageSquare className="size-5" />
                     AI Career Coach
                     <Sparkles className="size-4" />
+                </button>
+                <button
+                    onClick={handleJDReadinessClick}
+                    className="flex items-center gap-2 border border-cyan-300/35 bg-cyan-300/8 hover:bg-cyan-300/14 transition text-cyan-100 active:scale-95 rounded-lg px-7 h-11"
+                >
+                    <FileSearch className="size-5" />
+                    JD Readiness
                 </button>
             </motion.div>
             <TiltedImage />
