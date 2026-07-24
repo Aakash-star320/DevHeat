@@ -45,6 +45,7 @@ class User(Base):
 
     # Relationships
     portfolios = relationship("Portfolio", back_populates="user")
+    conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
     chat_messages = relationship("ChatMessage", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
@@ -164,6 +165,29 @@ class PortfolioVersion(Base):
         return f"<PortfolioVersion(portfolio_id='{self.portfolio_id}', version={self.version_number})>"
 
 
+class Conversation(Base):
+    """An isolated Career Coach conversation owned by one user."""
+    __tablename__ = "conversations"
+
+    id = Column(String(36), primary_key=True, default=get_uuid)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    conversation_type = Column(String(30), nullable=False, default="career_coach")
+    title = Column(String(160), nullable=False, default="New conversation")
+    state_json = Column(SQLiteJSON, nullable=False, default=dict)
+    summary = Column(Text, nullable=False, default="")
+    is_deleted = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    user = relationship("User", back_populates="conversations")
+    messages = relationship("ChatMessage", back_populates="conversation", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        Index('idx_conversation_user_updated', 'user_id', 'updated_at'),
+        Index('idx_conversation_user_type', 'user_id', 'conversation_type'),
+    )
+
+
 class ChatMessage(Base):
     """Chat message table for AI career bot conversations"""
     __tablename__ = "chat_messages"
@@ -173,6 +197,7 @@ class ChatMessage(Base):
 
     # Foreign key to user
     user_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    conversation_id = Column(String(36), ForeignKey("conversations.id"), nullable=False)
 
     # Message content
     role = Column(String(20), nullable=False)  # "user" or "assistant"
@@ -187,11 +212,13 @@ class ChatMessage(Base):
 
     # Relationships
     user = relationship("User", back_populates="chat_messages")
+    conversation = relationship("Conversation", back_populates="messages")
 
     # Indexes for performance
     __table_args__ = (
         Index('idx_chat_user_id', 'user_id'),
         Index('idx_chat_user_created', 'user_id', 'created_at'),
+        Index('idx_chat_conversation_created', 'conversation_id', 'created_at'),
     )
 
     def __repr__(self):

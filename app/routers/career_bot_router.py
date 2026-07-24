@@ -1,36 +1,55 @@
-"""Career Bot API Router"""
-from fastapi import APIRouter, Depends, HTTPException, status
+"""Career Coach conversation API."""
+from datetime import datetime
+from typing import List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+from pydantic import BaseModel, Field
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import func
-from pydantic import BaseModel
-from typing import List, Optional
-from app.database import get_db
-from app.routers.auth_router import get_current_user
-from app.models.database import User, ChatMessage
-from app.services import career_bot_service
+
 from app.config import logger
+from app.database import get_db
+from app.models.database import ChatMessage, Conversation, User
+from app.routers.auth_router import get_current_user
+from app.services import career_bot_service
+
 
 router = APIRouter(prefix="/career-bot", tags=["Career Bot"])
 
 
-# Request/Response Models
+class ConversationCreateRequest(BaseModel):
+    title: Optional[str] = Field(default=None, max_length=160)
+
+
+class ConversationRenameRequest(BaseModel):
+    title: str = Field(min_length=1, max_length=160)
+
+
+class ConversationResponse(BaseModel):
+    id: str
+    title: str
+    conversation_type: str
+    created_at: str
+    updated_at: str
+
+
 class ChatMessageRequest(BaseModel):
-    """Request model for sending a chat message"""
-    message: str
+    message: str = Field(min_length=1, max_length=6000)
 
 
 class ChatMessageResponse(BaseModel):
-    """Response model for chat message"""
     user_message: str
     assistant_message: str
     ai_service: str
     model_used: str
     timestamp: str
+    conversation_id: str
+    state_updated: bool
 
 
 class ChatHistoryItem(BaseModel):
-    """Individual chat message in history"""
+    id: str
     role: str
     content: str
     created_at: str
@@ -38,172 +57,162 @@ class ChatHistoryItem(BaseModel):
 
 
 class ChatHistoryResponse(BaseModel):
-    """Response model for chat history"""
     messages: List[ChatHistoryItem]
     total_count: int
 
 
-@router.post(
-    "/chat",
-    response_model=ChatMessageResponse,
-    summary="Send message to AI career bot",
-    description="Send a message and receive AI-powered career guidance",
-    responses={
-        200: {"description": "Successful response from AI"},
-        400: {"description": "Empty message or validation error"},
-        401: {"description": "Unauthorized - login required"},
-        500: {"description": "AI service unavailable"}
+def serialise_conversation(conversation: Conversation) -> dict:
+    return {
+        "id": conversation.id,
+        "title": conversation.title,
+        "conversation_type": conversation.conversation_type,
+        "created_at": conversation.created_at.isoformat(),
+        "updated_at": conversation.updated_at.isoformat(),
     }
-)
-async def send_chat_message(
-    request: ChatMessageRequest,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+
+
+async def get_owned_conversation(
+    conversation_id: str, user: User, db: AsyncSession
+) -> Conversation:
+    result = await db.execute(
+        select(Conversation).where(
+            Conversation.id == conversation_id,
+            Conversation.user_id == user.id,
+            Conversation.is_deleted.is_(False),
+        )
+    )
+    conversation = result.scalar_one_or_none()
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return conversation
+
+
+@router.get("/conversations", response_model=List[ConversationResponse])
+async def list_conversations(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
-    """
-    Send a message to the AI career bot and get personalized advice.
-
-    The bot has access to:
-    - Your GitHub profile and repositories
-    - Your uploaded resume
-    - LeetCode and Codeforces stats (if provided)
-    - Previous conversation history
-
-    **Example request:**
-    ```json
-    {
-        "message": "What skills should I focus on for a backend developer role?"
-    }
-    ```
-    """
-    if not request.message or not request.message.strip():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Message cannot be empty"
+    """List only the requesting user's active Career Coach conversations."""
+    result = await db.execute(
+        select(Conversation)
+        .where(
+            Conversation.user_id == current_user.id,
+            Conversation.conversation_type == "career_coach",
+            Conversation.is_deleted.is_(False),
         )
-
-    try:
-        response = await career_bot_service.send_message(
-            user_message=request.message.strip(),
-            user=current_user,
-            db=db
-        )
-        return response
-    except Exception as e:
-        logger.error(f"Error in chat endpoint for user {current_user.username}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process message: {str(e)}"
-        )
+        .order_by(Conversation.updated_at.desc())
+    )
+    return [serialise_conversation(conversation) for conversation in result.scalars().all()]
 
 
-@router.get(
-    "/history",
-    response_model=ChatHistoryResponse,
-    summary="Get conversation history",
-    description="Retrieve your chat history with the career bot",
-    responses={
-        200: {"description": "Chat history retrieved successfully"},
-        401: {"description": "Unauthorized - login required"}
-    }
-)
-async def get_chat_history(
-    limit: int = 50,
+@router.post("/conversations", response_model=ConversationResponse, status_code=status.HTTP_201_CREATED)
+async def create_conversation(
+    request: ConversationCreateRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a blank, isolated chat. It never imports another chat's state."""
+    title = (request.title or "New conversation").strip() or "New conversation"
+    conversation = Conversation(
+        user_id=current_user.id,
+        conversation_type="career_coach",
+        title=title,
+        state_json=career_bot_service.DEFAULT_CONVERSATION_STATE.copy(),
+        summary="",
+    )
+    db.add(conversation)
+    await db.commit()
+    await db.refresh(conversation)
+    return serialise_conversation(conversation)
+
+
+@router.patch("/conversations/{conversation_id}", response_model=ConversationResponse)
+async def rename_conversation(
+    conversation_id: str,
+    request: ConversationRenameRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    conversation = await get_owned_conversation(conversation_id, current_user, db)
+    title = request.title.strip()
+    if not title:
+        raise HTTPException(status_code=400, detail="Conversation title cannot be empty")
+    conversation.title = title
+    conversation.updated_at = datetime.utcnow()
+    await db.commit()
+    await db.refresh(conversation)
+    return serialise_conversation(conversation)
+
+
+@router.delete("/conversations/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_conversation(
+    conversation_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Permanently remove one conversation, its state, and every message in it."""
+    conversation = await get_owned_conversation(conversation_id, current_user, db)
+    message_result = await db.execute(
+        select(ChatMessage).where(ChatMessage.conversation_id == conversation.id)
+    )
+    for message in message_result.scalars().all():
+        await db.delete(message)
+    await db.delete(conversation)
+    await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/conversations/{conversation_id}/messages", response_model=ChatHistoryResponse)
+async def get_conversation_messages(
+    conversation_id: str,
+    limit: int = 100,
     offset: int = 0,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
-    """
-    Get your conversation history with pagination.
-
-    **Parameters:**
-    - **limit**: Maximum number of messages to return (default: 50, max: 100)
-    - **offset**: Number of messages to skip for pagination (default: 0)
-
-    **Example:**
-    - Get first 50 messages: `GET /career-bot/history`
-    - Get next 50 messages: `GET /career-bot/history?offset=50&limit=50`
-    """
-    # Validate parameters
-    if limit > 100:
-        limit = 100
-    if offset < 0:
-        offset = 0
-
-    # Get total count
-    count_result = await db.execute(
-        select(func.count(ChatMessage.id))
-        .where(ChatMessage.user_id == current_user.id)
-    )
-    total_count = count_result.scalar()
-
-    # Get paginated messages
-    result = await db.execute(
+    await get_owned_conversation(conversation_id, current_user, db)
+    limit = min(max(limit, 1), 100)
+    offset = max(offset, 0)
+    message_query = (
         select(ChatMessage)
-        .where(ChatMessage.user_id == current_user.id)
+        .where(ChatMessage.conversation_id == conversation_id)
         .order_by(ChatMessage.created_at.asc())
-        .offset(offset)
-        .limit(limit)
     )
-    messages = result.scalars().all()
-
+    total_result = await db.execute(
+        select(func.count(ChatMessage.id)).where(ChatMessage.conversation_id == conversation_id)
+    )
+    page_result = await db.execute(message_query.offset(offset).limit(limit))
+    page = page_result.scalars().all()
     return {
         "messages": [
             {
-                "role": msg.role,
-                "content": msg.content,
-                "created_at": msg.created_at.isoformat(),
-                "ai_service": msg.ai_service
+                "id": message.id,
+                "role": message.role,
+                "content": message.content,
+                "created_at": message.created_at.isoformat(),
+                "ai_service": message.ai_service,
             }
-            for msg in messages
+            for message in page
         ],
-        "total_count": total_count
+        "total_count": total_result.scalar_one(),
     }
 
 
-@router.delete(
-    "/history",
-    summary="Clear conversation history",
-    description="Delete all your chat messages",
-    responses={
-        200: {"description": "History cleared successfully"},
-        401: {"description": "Unauthorized - login required"}
-    }
+@router.post(
+    "/conversations/{conversation_id}/messages", response_model=ChatMessageResponse
 )
-async def clear_chat_history(
+async def send_conversation_message(
+    conversation_id: str,
+    request: ChatMessageRequest,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
-    """
-    Clear your entire conversation history with the career bot.
-
-    **Warning:** This action cannot be undone. All your chat messages will be permanently deleted.
-
-    **Returns:**
-    ```json
-    {
-        "message": "Deleted N messages",
-        "count": N
-    }
-    ```
-    """
-    # Fetch all messages for the user
-    result = await db.execute(
-        select(ChatMessage)
-        .where(ChatMessage.user_id == current_user.id)
-    )
-    messages = result.scalars().all()
-
-    # Delete all messages
-    count = len(messages)
-    for msg in messages:
-        await db.delete(msg)
-
-    await db.commit()
-
-    logger.info(f"User {current_user.username} cleared {count} chat messages")
-
-    return {
-        "message": f"Deleted {count} messages",
-        "count": count
-    }
+    """Send a message using only the selected conversation's history and state."""
+    message = request.message.strip()
+    if not message:
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+    conversation = await get_owned_conversation(conversation_id, current_user, db)
+    try:
+        return await career_bot_service.send_message(message, current_user, conversation, db)
+    except RuntimeError as error:
+        logger.error("Career Coach failed for user %s: %s", current_user.username, error)
+        raise HTTPException(status_code=503, detail="Career Coach is temporarily unavailable") from error
