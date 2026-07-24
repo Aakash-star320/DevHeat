@@ -4,11 +4,12 @@ Gemini extracts a bounded, evidence-based assessment. The final score is
 calculated here, rather than being entrusted to a generative model.
 """
 import asyncio
-import json
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Literal
 
-import google.generativeai as genai
+from google import genai as google_genai
+from google.genai import types as genai_types
+from pydantic import BaseModel, Field
 
 from app.config import GEMINI_API_KEY, logger
 
@@ -36,10 +37,6 @@ PROMPT_INJECTION_PATTERNS = (
 class SuspiciousJobDescriptionError(ValueError):
     """Raised before a suspicious JD is sent to any model."""
 
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-
-
 def _clean_text(value: Any, limit: int = 600) -> str:
     return value.strip()[:limit] if isinstance(value, str) else ""
 
@@ -47,6 +44,47 @@ def _clean_text(value: Any, limit: int = 600) -> str:
 def _contains_prompt_injection(job_description: str) -> bool:
     """Reject high-confidence instruction attacks without sending text to Gemini."""
     return any(pattern.search(job_description) for pattern in PROMPT_INJECTION_PATTERNS)
+
+
+# This schema is sent directly to Gemini. It constrains output shape and enums
+# before our existing normalisation and deterministic scoring code runs.
+class JDToolItem(BaseModel):
+    name: str
+    required_level: Literal["Basic", "Working", "Strong"]
+    match: Literal["Strong", "Medium", "Weak"]
+    evidence: str = ""
+    improvement: str = ""
+
+
+class JDRequirementItem(BaseModel):
+    name: str
+    match: Literal["Strong", "Medium", "Weak"]
+    evidence: str = ""
+    improvement: str = ""
+
+
+class JDToolGroup(BaseModel):
+    source_text: str
+    label: str
+    logic: Literal["any_of", "all_of", "at_least_n"] = "all_of"
+    minimum_matches: int = 1
+    items: List[JDToolItem] = Field(default_factory=list)
+
+
+class JDRequirementGroup(BaseModel):
+    source_text: str
+    label: str
+    category: Literal["technical", "professional_collaboration"] = "technical"
+    logic: Literal["any_of", "all_of", "at_least_n"] = "all_of"
+    minimum_matches: int = 1
+    items: List[JDRequirementItem] = Field(default_factory=list)
+
+
+class JDAnalysisResponse(BaseModel):
+    security_status: Literal["ok", "blocked"] = "ok"
+    tools: List[JDToolGroup] = Field(default_factory=list)
+    requirements: List[JDRequirementGroup] = Field(default_factory=list)
+    overall_tips: List[str] = Field(default_factory=list)
 
 
 def _match_value(value: Any) -> str:
@@ -119,20 +157,6 @@ def _normalise_analysis(raw: Any) -> Dict[str, Any]:
         _clean_text(tip, 360) for tip in tips[:5] if _clean_text(tip, 360)
     ] if isinstance(tips, list) else []
     return result
-
-
-def _parse_gemini_json(raw: str) -> Any:
-    """Accept a JSON object only; tolerate an accidental Markdown fence."""
-    value = raw.strip()
-    if value.startswith("```"):
-        value = value.split("\n", 1)[1] if "\n" in value else ""
-        if value.rstrip().endswith("```"):
-            value = value.rstrip()[:-3]
-    decoder = json.JSONDecoder()
-    parsed, end = decoder.raw_decode(value.lstrip())
-    if value.lstrip()[end:].strip():
-        raise json.JSONDecodeError("Unexpected content after JSON object", value, end)
-    return parsed
 
 
 def _group_score(group: Dict[str, Any], section: str) -> float:
@@ -315,20 +339,41 @@ JOB DESCRIPTION
 ---'''
 
 
-async def _ask_gemini(prompt: str) -> str:
+async def _ask_gemini(prompt: str) -> JDAnalysisResponse:
     if not GEMINI_API_KEY:
         raise RuntimeError("Gemini API key is not configured")
-    model = genai.GenerativeModel(GEMINI_MODEL)
+    client = google_genai.Client(api_key=GEMINI_API_KEY)
     response = await asyncio.to_thread(
-        model.generate_content,
-        prompt,
-        generation_config=genai.types.GenerationConfig(
+        client.models.generate_content,
+        model=GEMINI_MODEL,
+        contents=prompt,
+        config=genai_types.GenerateContentConfig(
             temperature=0.0,
             max_output_tokens=5000,
             response_mime_type="application/json",
+            response_schema=JDAnalysisResponse,
         ),
     )
-    return response.text
+    if response.parsed is not None:
+        if isinstance(response.parsed, JDAnalysisResponse):
+            logger.info("JD readiness received SDK-parsed schema output")
+            return response.parsed
+        logger.info("JD readiness received dictionary schema output")
+        return JDAnalysisResponse.model_validate(response.parsed)
+
+    # Some google-genai responses contain valid schema-constrained JSON text
+    # while leaving the optional convenience `parsed` field empty. Validate that
+    # text with the same Pydantic schema before treating the request as failed.
+    try:
+        validated = JDAnalysisResponse.model_validate_json(response.text)
+        logger.info("JD readiness accepted Pydantic-validated schema text fallback")
+        return validated
+    except Exception as error:
+        candidate = response.candidates[0] if response.candidates else None
+        raise ValueError(
+            "Gemini returned neither parsed output nor schema-valid JSON "
+            f"(finish_reason={getattr(candidate, 'finish_reason', 'unknown')})"
+        ) from error
 
 
 async def analyse_jd(resume_text: str, job_description: str) -> Dict[str, Any]:
@@ -340,11 +385,10 @@ async def analyse_jd(resume_text: str, job_description: str) -> Dict[str, Any]:
     for attempt in range(1, 4):
         try:
             logger.info("JD readiness Gemini attempt %s/3", attempt)
-            raw = await _ask_gemini(prompt)
-            parsed = _parse_gemini_json(raw)
-            if isinstance(parsed, dict) and parsed.get("security_status") == "blocked":
+            parsed = await _ask_gemini(prompt)
+            if parsed.security_status == "blocked":
                 raise SuspiciousJobDescriptionError(PROMPT_INJECTION_MESSAGE)
-            analysis = _normalise_analysis(parsed)
+            analysis = _normalise_analysis(parsed.model_dump(mode="json"))
             _apply_professional_collaboration_floor(analysis, resume_text)
             return _build_report(analysis)
         except SuspiciousJobDescriptionError:

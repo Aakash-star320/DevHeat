@@ -57,6 +57,19 @@ A full-stack application that generates professional portfolios by aggregating d
 - **Interactive UI** - Easy-to-use forms with real-time validation
 - **Context-Based State Management** - React Context for global authentication state
 
+### AI Career Coach
+- **Focused Conversations** - Create, rename, reopen, and delete separate coaching conversations
+- **Conversation State** - Each chat keeps compact, validated context for goals, skills, gaps, decisions, next actions, and open questions
+- **Gemini-Powered Guidance** - Receive contextual career advice while each conversation remains isolated
+- **Readable Responses** - Markdown rendering, copy controls, and a full-screen chat mode for longer sessions
+
+### JD Readiness
+- **Resume-First Matching** - Paste a job description to compare it with the complete resume stored in your latest portfolio; repository and competitive-programming data are intentionally excluded from the score
+- **Structured Analysis** - Gemini extracts tools and role requirements into a validated schema before deterministic scoring
+- **Clear Scoring** - Tools account for 35 points and requirements 40 points, with applicable weights normalized and a maximum readiness score of 95
+- **Actionable Results** - See strongest evidence, missing or partial requirements, matched tools, and focused improvement tips
+- **Safe Input Handling** - Boilerplate is ignored and likely prompt-injection text is rejected before it reaches the model
+
 ---
 
 ## Tech Stack
@@ -69,7 +82,7 @@ A full-stack application that generates professional portfolios by aggregating d
 - **Pydantic** - Data validation and serialization
 - **PyJWT** - JSON Web Token implementation for authentication
 - **python-jose** - JWT token creation and verification
-- **Google Gemini** (0.7.2) - AI content generation
+- **Google Gemini** - Content generation, career coaching, and JD analysis (`google-generativeai` and the current `google-genai` SDK)
 - **httpx** (0.28.1) - Async HTTP client (GitHub OAuth & API calls)
 - **pdfplumber** (0.11.4) - PDF text extraction
 - **python-docx** (1.1.2) - DOCX text extraction
@@ -388,6 +401,18 @@ Frontend will be available at: **http://localhost:5173** (or the port Vite assig
   - Competitive programming stats
   - Contact information
 
+### 7. AI Career Coach
+- Open **AI Career Coach** from the navigation or dashboard
+- Start a new conversation, or reopen a previous one
+- The selected conversation retains only its own compact career context and message history
+- Use full-screen mode and copy formatted answers when needed
+
+### 8. JD Readiness
+- Open **JD Readiness** and paste the role responsibilities and qualifications
+- SmartFolio uses the full stored resume from your latest portfolio, rather than GitHub or coding-profile data, because the resume is what an employer reviews
+- The result scores tools and technical requirements, surfaces gaps and strengths, and provides practical improvement tips
+- The analysis is skill-focused: it does not make hard education, country, graduation, or employment-eligibility decisions
+
 ---
 
 ## API Documentation
@@ -445,7 +470,25 @@ Returns authenticated user information.
 - `POST /portfolio/generate` - Requires authentication
 - `GET /portfolio/{slug}/coaching` - Requires authentication
 - `POST /portfolio/{slug}/refine` - Requires authentication
+- `/career-bot/*` - Requires authentication
+- `POST /jd-match/analyze` - Requires authentication
 - All other portfolio management endpoints
+
+### JD Readiness
+
+```bash
+POST /jd-match/analyze
+Authorization: Bearer {jwt_token}
+Content-Type: application/json
+```
+
+```json
+{
+  "job_description": "Paste the role responsibilities and qualifications here"
+}
+```
+
+Requires a resume in the user's latest portfolio. Returns the capped readiness score, section results, strengths, gaps, and improvement tips. Text that appears to be prompt injection is rejected before it is sent to Gemini.
 
 ### Health Check
 
@@ -857,6 +900,17 @@ Returns problem-solving statistics via GraphQL.
   - Contact Information
 - Shareable URL for recruiters
 - Mobile-optimized design
+
+### 7. AI Career Coach (`/career-bot`)
+- Authenticated coaching workspace with isolated conversations
+- Create, rename, reopen, and delete conversations
+- Compact per-conversation state keeps replies relevant without resending the entire chat every time
+- Markdown answers, copy controls, and a full-screen reading mode
+
+### 8. JD Readiness (`/jd-readiness`)
+- Paste a job description and assess readiness against the complete stored resume
+- Displays a capped score, tool coverage, requirements coverage, strengths, gaps, and improvement tips
+- Does not score hard eligibility criteria; it focuses on demonstrated skills and experience evidence
 
 ---
 
