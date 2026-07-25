@@ -3,15 +3,15 @@ import logging
 from typing import Dict, Any
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.models.database import Portfolio, User
+from app.models.database import Portfolio, PortfolioVersion, User
 from app.models.schemas import PortfolioStatusResponse
 from app.routers.auth_router import get_current_user
 
@@ -21,6 +21,43 @@ router = APIRouter(prefix="/portfolio", tags=["Portfolio Retrieval"])
 
 # Setup Jinja2 templates
 templates = Jinja2Templates(directory="app/templates")
+
+
+@router.delete("/{slug}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_portfolio(
+    slug: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete one owned portfolio and its derived knowledge, while preserving chats."""
+    result = await db.execute(
+        select(Portfolio).where(Portfolio.slug == slug, Portfolio.user_id == current_user.id)
+    )
+    portfolio = result.scalar_one_or_none()
+    if not portfolio:
+        raise HTTPException(status_code=404, detail="Portfolio not found")
+    if portfolio.status == "generating":
+        raise HTTPException(status_code=409, detail="Wait for portfolio generation to finish before deleting it")
+
+    try:
+        from app.services.rag_service import delete_portfolio_knowledge
+
+        await delete_portfolio_knowledge(current_user.id, portfolio.id)
+    except Exception as error:
+        logger.error("Portfolio deletion stopped because RAG cleanup failed: %s", error)
+        raise HTTPException(
+            status_code=503,
+            detail="Portfolio deletion could not safely remove its RAG knowledge. Please try again.",
+        ) from error
+
+    await db.execute(
+        update(Portfolio).where(Portfolio.id == portfolio.id).values(current_version_id=None)
+    )
+    await db.execute(delete(PortfolioVersion).where(PortfolioVersion.portfolio_id == portfolio.id))
+    await db.execute(delete(Portfolio).where(Portfolio.id == portfolio.id))
+    await db.commit()
+    logger.info("Deleted portfolio %s and all of its versions for user %s", portfolio.id, current_user.id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/{slug}", response_model=Dict[str, Any])

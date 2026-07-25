@@ -10,7 +10,7 @@ from sqlalchemy.future import select
 
 from app.config import logger
 from app.database import get_db
-from app.models.database import ChatMessage, Conversation, User
+from app.models.database import ChatMessage, Conversation, Portfolio, User
 from app.routers.auth_router import get_current_user
 from app.services import career_bot_service
 
@@ -61,6 +61,24 @@ class ChatHistoryResponse(BaseModel):
     total_count: int
 
 
+async def get_current_user_with_completed_portfolio(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """Keep Career Coach access tied to a completed candidate profile."""
+    result = await db.execute(
+        select(Portfolio.id)
+        .where(Portfolio.user_id == current_user.id, Portfolio.status == "completed")
+        .limit(1)
+    )
+    if not result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Create a completed portfolio before using AI Career Coach.",
+        )
+    return current_user
+
+
 def serialise_conversation(conversation: Conversation) -> dict:
     return {
         "id": conversation.id,
@@ -89,7 +107,7 @@ async def get_owned_conversation(
 
 @router.get("/conversations", response_model=List[ConversationResponse])
 async def list_conversations(
-    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    current_user: User = Depends(get_current_user_with_completed_portfolio), db: AsyncSession = Depends(get_db)
 ):
     """List only the requesting user's active Career Coach conversations."""
     result = await db.execute(
@@ -107,7 +125,7 @@ async def list_conversations(
 @router.post("/conversations", response_model=ConversationResponse, status_code=status.HTTP_201_CREATED)
 async def create_conversation(
     request: ConversationCreateRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_with_completed_portfolio),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a blank, isolated chat. It never imports another chat's state."""
@@ -129,7 +147,7 @@ async def create_conversation(
 async def rename_conversation(
     conversation_id: str,
     request: ConversationRenameRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_with_completed_portfolio),
     db: AsyncSession = Depends(get_db),
 ):
     conversation = await get_owned_conversation(conversation_id, current_user, db)
@@ -146,7 +164,7 @@ async def rename_conversation(
 @router.delete("/conversations/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_conversation(
     conversation_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_with_completed_portfolio),
     db: AsyncSession = Depends(get_db),
 ):
     """Permanently remove one conversation, its state, and every message in it."""
@@ -166,7 +184,7 @@ async def get_conversation_messages(
     conversation_id: str,
     limit: int = 100,
     offset: int = 0,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_with_completed_portfolio),
     db: AsyncSession = Depends(get_db),
 ):
     await get_owned_conversation(conversation_id, current_user, db)
@@ -203,7 +221,7 @@ async def get_conversation_messages(
 async def send_conversation_message(
     conversation_id: str,
     request: ChatMessageRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_with_completed_portfolio),
     db: AsyncSession = Depends(get_db),
 ):
     """Send a message using only the selected conversation's history and state."""

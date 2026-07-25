@@ -41,8 +41,15 @@ const CareerBotChat = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isLoadingMessages, setIsLoadingMessages] = useState(false);
     const [error, setError] = useState('');
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 1024);
     const [isFullscreen, setIsFullscreen] = useState(false);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(min-width: 1025px)');
+        const syncSidebar = (event) => setSidebarOpen(event.matches);
+        mediaQuery.addEventListener('change', syncSidebar);
+        return () => mediaQuery.removeEventListener('change', syncSidebar);
+    }, []);
     const [renamingId, setRenamingId] = useState(null);
     const [renameValue, setRenameValue] = useState('');
     const [copiedMessageId, setCopiedMessageId] = useState(null);
@@ -251,8 +258,8 @@ const CareerBotChat = () => {
                 <div className="coach-sidebar-brand">
                     <div className="coach-brand-mark"><Sparkles size={18} /></div>
                     <div className="coach-brand-copy">
-                        <span>DEVHEAT</span>
-                        <strong>Career studio</strong>
+                        <span>CAREERFOLIO</span>
+                        <strong>Career Coach</strong>
                     </div>
                     <button className="icon-button sidebar-collapse" onClick={() => setSidebarOpen(false)} aria-label="Collapse conversations">
                         <ChevronLeft size={18} />
@@ -321,7 +328,6 @@ const CareerBotChat = () => {
                         <h2>{activeConversation?.title || 'Start a fresh conversation'}</h2>
                     </div>
                     <div className="coach-header-actions">
-                        <div className="coach-context-chip"><Check size={14} /> Context stays in this chat</div>
                         <button
                             type="button"
                             className="icon-button fullscreen-button"
@@ -342,7 +348,7 @@ const CareerBotChat = () => {
                             <div className="coach-welcome-orb"><Sparkles size={32} /></div>
                             <span className="eyebrow">YOUR PRIVATE COACHING SPACE</span>
                             <h3>Make your next career move<br />with a clearer plan.</h3>
-                            <p>Ask about interviews, your skills, projects, or the best next step. This chat starts fresh and keeps its own context.</p>
+                            <p>Ask about interviews, your skills, projects, or the best next step in your career.</p>
                             <div className="starter-grid">
                                 {starterPrompts.map((prompt) => (
                                     <button key={prompt} onClick={() => setInputMessage(prompt)}>
@@ -400,7 +406,7 @@ const CareerBotChat = () => {
                         {isLoading ? <MoreHorizontal size={21} /> : <ArrowUp size={20} />}
                     </button>
                 </form>
-                <p className="coach-composer-note">Your conversation context is isolated from your other chats.</p>
+                <p className="coach-composer-note">Personalized guidance based on your portfolio.</p>
             </div>
         </section>
     );

@@ -1,4 +1,4 @@
-# SmartFolio - AI-Powered Portfolio Generator
+# CareerFolio - Portfolio, Readiness & Career Guidance
 
 > Transform your professional data into stunning portfolios with personalized coaching insights
 
@@ -109,7 +109,7 @@ A full-stack application that generates professional portfolios by aggregating d
 ## Project Structure
 
 ```
-DevHeat/
+CareerFolio/
 ├── app/                                     # Backend application
 │   ├── main.py                              # FastAPI app with lifecycle events
 │   ├── config.py                            # Configuration (API keys, constants)
@@ -261,6 +261,8 @@ GITHUB_TOKEN=your_github_personal_access_token_here
 
 # Google Gemini API Key (for AI content generation)
 GEMINI_API_KEY=your_gemini_api_key_here
+# Career Coach, JD Readiness, and RAG embeddings use Gemini directly.
+# No OpenRouter environment variables are required.
 
 # Database URL (SQLite for development, PostgreSQL for production)
 DATABASE_URL=sqlite+aiosqlite:///./portfolio.db
@@ -278,7 +280,7 @@ JWT_SECRET=change-me-in-production-use-random-string
 1. Go to https://github.com/settings/developers
 2. Click "New OAuth App"
 3. Fill in:
-   - **Application name**: SmartFolio (or your app name)
+   - **Application name**: CareerFolio (or your app name)
    - **Homepage URL**: `http://localhost:5173` (dev) or your domain (prod)
    - **Authorization callback URL**: `http://localhost:8000/auth/callback` (dev) or `https://your-backend.com/auth/callback` (prod)
 4. Click "Register application"
@@ -353,13 +355,13 @@ Frontend will be available at: **http://localhost:5173** (or the port Vite assig
 ## User Workflow
 
 ### 1. Landing Page
-- Visit the home page to learn about SmartFolio
+- Visit the home page to learn about CareerFolio
 - Browse features, testimonials, and examples
 - Click "Sign in with GitHub" in the navbar (required for portfolio generation)
 
 ### 2. GitHub Authentication
 - Click "Sign in with GitHub" button
-- Authorize SmartFolio to access your GitHub profile
+- Authorize CareerFolio to access your GitHub profile
 - Get redirected back to the app with your account created
 - Your avatar and username appear in the navbar
 
@@ -409,7 +411,7 @@ Frontend will be available at: **http://localhost:5173** (or the port Vite assig
 
 ### 8. JD Readiness
 - Open **JD Readiness** and paste the role responsibilities and qualifications
-- SmartFolio uses the full stored resume from your latest portfolio, rather than GitHub or coding-profile data, because the resume is what an employer reviews
+- CareerFolio uses the full stored resume from your latest portfolio, rather than GitHub or coding-profile data, because the resume is what an employer reviews
 - The result scores tools and technical requirements, surfaces gaps and strengths, and provides practical improvement tips
 - The analysis is skill-focused: it does not make hard education, country, graduation, or employment-eligibility decisions
 
@@ -424,7 +426,7 @@ http://localhost:8000
 
 ### Authentication
 
-SmartFolio uses **GitHub OAuth** for user authentication and **JWT tokens** for API authorization.
+CareerFolio uses **GitHub OAuth** for user authentication and **JWT tokens** for API authorization.
 
 #### Login with GitHub
 

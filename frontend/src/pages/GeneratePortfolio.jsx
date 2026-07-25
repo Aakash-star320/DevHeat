@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Upload, Github, Code2, Trophy, Search, Check, Plus } from 'lucide-react';
 import Navbar from '../components/navbar';
@@ -11,7 +11,9 @@ import { useAuth } from '../hooks/useAuth';
 
 export default function GeneratePortfolio() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useAuth();
+    const accessMessage = location.state?.accessMessage;
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [loadingMessage, setLoadingMessage] = useState('');
@@ -145,6 +147,25 @@ export default function GeneratePortfolio() {
         }
     };
 
+    if (!user) {
+        return (
+            <>
+                <LenisScroll />
+                <Navbar />
+                <main className="min-h-[70vh] px-6 py-16 md:px-16 lg:px-24 xl:px-32">
+                    <section className="mx-auto flex max-w-2xl justify-center rounded-3xl border border-indigo-400/25 bg-indigo-500/10 px-6 py-16 text-center">
+                        <div className="max-w-lg">
+                            <p className="mb-3 text-sm font-bold tracking-[0.18em] text-indigo-300">SIGN IN REQUIRED</p>
+                            <h1 className="mb-3 text-3xl font-semibold text-white">Sign in to create your portfolio</h1>
+                            <p className="text-slate-300">Please sign in with GitHub first to create and manage your professional portfolio.</p>
+                        </div>
+                    </section>
+                </main>
+                <Footer />
+            </>
+        );
+    }
+
     return (
         <>
             <LenisScroll />
@@ -233,6 +254,16 @@ export default function GeneratePortfolio() {
                     transition={{ delay: 0.4, duration: 0.6 }}
                 >
                     <form onSubmit={handleSubmit} className="bg-slate-900/50 backdrop-blur-lg rounded-3xl p-8 md:p-12 shadow-2xl border border-slate-700">
+                        {accessMessage && (
+                            <motion.div
+                                className="mb-8 flex items-start gap-3 p-4 bg-indigo-500/10 border border-indigo-400/30 rounded-xl text-indigo-100"
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                            >
+                                <span className="mt-0.5 text-indigo-300">âœ¦</span>
+                                <p>{accessMessage} Your portfolio provides the profile information these features need.</p>
+                            </motion.div>
+                        )}
                         {error && (
                             <motion.div
                                 className="mb-8 p-4 bg-red-500/10 border border-red-500/50 rounded-xl text-red-400"

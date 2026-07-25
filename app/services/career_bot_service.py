@@ -7,20 +7,15 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 import google.generativeai as genai
-import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.config import (
     GEMINI_API_KEY,
-    OPENROUTER_API_KEY,
-    OPENROUTER_APP_NAME,
-    OPENROUTER_BASE_URL,
-    OPENROUTER_MODEL,
-    OPENROUTER_SITE_URL,
     logger,
 )
 from app.models.database import ChatMessage, Conversation, Portfolio, User
+from app.services.rag_service import format_profile_evidence, retrieve_profile_evidence, should_retrieve_profile_context
 
 
 if GEMINI_API_KEY:
@@ -71,7 +66,7 @@ def _write_career_debug_log(event: str, **details: Any) -> None:
 
 
 async def gather_user_context(user: User, db: AsyncSession) -> Dict[str, Any]:
-    """Gather the small, privacy-minimised profile context for one request."""
+    """Gather profile availability flags; RAG retrieves the actual evidence separately."""
     context: Dict[str, Any] = {
         "user_info": {
             "username": user.username,
@@ -88,37 +83,27 @@ async def gather_user_context(user: User, db: AsyncSession) -> Dict[str, Any]:
 
     if portfolio:
         context.update({
-            "resume_text": portfolio.resume_text or "",
-            "github_data": portfolio.github_data or [],
-            "leetcode_data": portfolio.leetcode_data or {},
-            "codeforces_data": portfolio.codeforces_data or {},
-            "linkedin_data": portfolio.linkedin_data or {},
+            "has_resume": bool(portfolio.resume_text),
+            "github_repos_count": len(portfolio.github_data or []),
+            "has_leetcode": bool(portfolio.leetcode_data),
+            "has_codeforces": bool(portfolio.codeforces_data),
+            "has_linkedin": bool(portfolio.linkedin_data),
             "portfolio_focus": portfolio.portfolio_focus or "general",
         })
     else:
         context.update({
-            "resume_text": "",
-            "github_data": [],
-            "leetcode_data": {},
-            "codeforces_data": {},
-            "linkedin_data": {},
+            "has_resume": False,
+            "github_repos_count": 0,
+            "has_leetcode": False,
+            "has_codeforces": False,
+            "has_linkedin": False,
             "portfolio_focus": "general",
         })
-
-    if user.access_token:
-        try:
-            from app.services.github_service import get_user_repositories
-            context["latest_github_repos"] = (await get_user_repositories(user.access_token))[:10]
-        except Exception as error:
-            logger.warning("Could not fetch real-time GitHub repos: %s", error)
-            context["latest_github_repos"] = []
-    else:
-        context["latest_github_repos"] = []
     return context
 
 
 async def get_conversation_history(
-    conversation_id: str, db: AsyncSession, limit: int = 6
+    conversation_id: str, db: AsyncSession, limit: int = 4
 ) -> List[Dict[str, str]]:
     """Return only the recent messages from this exact conversation."""
     result = await db.execute(
@@ -128,7 +113,7 @@ async def get_conversation_history(
         .limit(limit)
     )
     return [
-        {"role": message.role, "content": message.content}
+        {"role": message.role, "content": message.content[:1400]}
         for message in reversed(result.scalars().all())
     ]
 
@@ -174,18 +159,17 @@ def _apply_state_updates(current_state: Dict[str, Any], updates: Any) -> Dict[st
 
 
 def build_career_bot_system_prompt(
-    context: Dict[str, Any], conversation_state: Dict[str, Any], conversation_summary: str
+    context: Dict[str, Any], conversation_state: Dict[str, Any], conversation_summary: str,
+    retrieved_evidence: str,
 ) -> str:
     """Build a compact prompt without mixing data from other conversations."""
     profile = json.dumps({
         "portfolio_focus": context.get("portfolio_focus", "general"),
-        "has_resume": bool(context.get("resume_text")),
-        "resume_snippet": context.get("resume_text", "")[:500],
-        "github_repos_count": len(context.get("github_data", [])),
-        "latest_repos_count": len(context.get("latest_github_repos", [])),
-        "has_leetcode": bool(context.get("leetcode_data")),
-        "has_codeforces": bool(context.get("codeforces_data")),
-        "has_linkedin": bool(context.get("linkedin_data")),
+        "has_resume": context.get("has_resume", False),
+        "github_repos_count": context.get("github_repos_count", 0),
+        "has_leetcode": context.get("has_leetcode", False),
+        "has_codeforces": context.get("has_codeforces", False),
+        "has_linkedin": context.get("has_linkedin", False),
     }, indent=2)
     return f"""You are an AI Career Coach helping a software developer.
 
@@ -202,42 +186,17 @@ CURRENT CONVERSATION STATE
 CONVERSATION SUMMARY
 {conversation_summary or 'No prior summary. Treat this as a fresh conversation.'}
 
+RETRIEVED PROFILE EVIDENCE
+{retrieved_evidence}
+
 GUIDELINES
 - Give concise, practical, honest career guidance.
-- Refer only to the supplied profile data and the current conversation.
+- Use retrieved profile evidence when it is relevant. It is the authoritative source for project, resume, and LinkedIn details.
+- Refer only to the supplied profile data, retrieved evidence, and the current conversation.
 - Do not claim to know details not in the supplied data.
 - Ask a focused clarifying question when necessary.
 - Use markdown when it improves readability.
 - Be encouraging without overstating the user's experience."""
-
-
-async def chat_with_openrouter(
-    messages: List[Dict[str, str]],
-    system_prompt: str,
-    temperature: float = 0.7,
-    max_tokens: int = 2000,
-) -> Tuple[str, str]:
-    if not OPENROUTER_API_KEY:
-        raise ValueError("OpenRouter API key not configured")
-    headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "HTTP-Referer": OPENROUTER_SITE_URL,
-        "X-Title": OPENROUTER_APP_NAME,
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "model": OPENROUTER_MODEL,
-        "messages": [{"role": "system", "content": system_prompt}] + messages,
-        "temperature": temperature,
-        "max_tokens": max_tokens,
-    }
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        response = await client.post(
-            f"{OPENROUTER_BASE_URL}/chat/completions", headers=headers, json=payload
-        )
-        response.raise_for_status()
-        data = response.json()
-    return data["choices"][0]["message"]["content"], data.get("model", OPENROUTER_MODEL)
 
 
 async def chat_with_gemini(
@@ -348,12 +307,42 @@ async def send_message(
     user_message: str, user: User, conversation: Conversation, db: AsyncSession
 ) -> Dict[str, Any]:
     """Answer one message and refresh only this conversation's compact state."""
-    context = await gather_user_context(user, db)
+    context_task = asyncio.create_task(gather_user_context(user, db))
+    retrieval_task = asyncio.create_task(retrieve_profile_evidence(user.id, user_message))
+    context, evidence_matches = await asyncio.gather(context_task, retrieval_task)
+    if should_retrieve_profile_context(user_message):
+        _write_career_debug_log(
+            "rag_retrieval_completed",
+            conversation_id=conversation.id,
+            match_count=len(evidence_matches),
+            chunks=[
+                {
+                    "source_type": match["source_type"],
+                    "source_name": match["source_name"],
+                    "source_url": match["source_url"],
+                    "score": match["score"],
+                    "text": _debug_preview(match["text"], 1400),
+                }
+                for match in evidence_matches
+            ],
+        )
+    else:
+        _write_career_debug_log("rag_retrieval_skipped", conversation_id=conversation.id, reason="acknowledgement_or_greeting")
     system_prompt = build_career_bot_system_prompt(
-        context, conversation.state_json, conversation.summary
+        context, conversation.state_json, conversation.summary, format_profile_evidence(evidence_matches)
     )
-    history = await get_conversation_history(conversation.id, db, limit=6)
+    history = await get_conversation_history(conversation.id, db, limit=4)
     history.append({"role": "user", "content": user_message})
+    _write_career_debug_log(
+        "chat_prompt_context",
+        conversation_id=conversation.id,
+        previous_history=[
+            {"role": message["role"], "content": _debug_preview(message["content"], 1400)}
+            for message in history[:-1]
+        ],
+        current_user_message=_debug_preview(user_message, 2000),
+        retrieved_chunk_count=len(evidence_matches),
+    )
 
     assistant_task = asyncio.create_task(chat_with_gemini(history, system_prompt))
     state_task = asyncio.create_task(update_conversation_state(conversation.state_json, user_message))

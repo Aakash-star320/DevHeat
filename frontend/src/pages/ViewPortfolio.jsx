@@ -218,7 +218,7 @@ export default function ViewPortfolio() {
                     </div>
                 </section>
             </main>
-            <footer className="folio-footer"><span>© {new Date().getFullYear()} {name}</span><span>Designed with intent <ChevronRight size={13} /> Powered by SmartFolio</span></footer>
+            <footer className="folio-footer"><span>© {new Date().getFullYear()} {name}</span><span>Designed with intent <ChevronRight size={13} /> Powered by CareerFolio</span></footer>
         </div>
     );
 }

@@ -6,25 +6,14 @@ import TiltedImage from "../components/tilt-image";
 
 export default function HeroSection() {
     const navigate = useNavigate();
-    const { user, login } = useAuth();
+    const { user } = useAuth();
 
-    const handleCareerBotClick = () => {
-        if (user) {
-            navigate('/career-bot');
-        } else {
-            // Store intended destination
-            sessionStorage.setItem('redirectAfterLogin', '/career-bot');
-            login();
+    const openFeature = (path, featureName) => {
+        if (!user) {
+            window.alert(`Please sign in with GitHub first to use ${featureName}.`);
+            return;
         }
-    };
-
-    const handleJDReadinessClick = () => {
-        if (user) {
-            navigate('/jd-readiness');
-        } else {
-            sessionStorage.setItem('redirectAfterLogin', '/jd-readiness');
-            login();
-        }
+        navigate(path);
     };
 
     return (
@@ -75,7 +64,7 @@ export default function HeroSection() {
                 transition={{ type: "spring", stiffness: 320, damping: 70, mass: 1 }}
             >
                 <button
-                    onClick={() => navigate('/generate')}
+                    onClick={() => openFeature('/generate', 'CareerFolio')}
                     className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 transition text-white active:scale-95 rounded-lg px-7 h-11"
                 >
                     Generate Portfolio
@@ -83,7 +72,7 @@ export default function HeroSection() {
                 </button>
 
                 <button
-                    onClick={handleCareerBotClick}
+                    onClick={() => openFeature('/career-bot', 'AI Career Coach')}
                     className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 transition text-white active:scale-95 rounded-lg px-7 h-11 shadow-lg hover:shadow-xl"
                 >
                     <MessageSquare className="size-5" />
@@ -91,7 +80,7 @@ export default function HeroSection() {
                     <Sparkles className="size-4" />
                 </button>
                 <button
-                    onClick={handleJDReadinessClick}
+                    onClick={() => openFeature('/jd-readiness', 'JD Readiness')}
                     className="flex items-center gap-2 border border-cyan-300/35 bg-cyan-300/8 hover:bg-cyan-300/14 transition text-cyan-100 active:scale-95 rounded-lg px-7 h-11"
                 >
                     <FileSearch className="size-5" />

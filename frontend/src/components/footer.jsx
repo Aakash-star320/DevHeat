@@ -10,7 +10,7 @@ export default function Footer() {
         >
 
             <p className="py-4 text-center border-t mt-6 border-slate-700">
-                Copyright 2026 © SmartFolio • AI-Powered Portfolio Generator • All Rights Reserved
+                Copyright 2026 © CareerFolio • Portfolio, Readiness & Career Guidance • All Rights Reserved
             </p>
         </motion.footer>
     );

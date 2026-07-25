@@ -204,8 +204,8 @@ class ChatMessage(Base):
     content = Column(Text, nullable=False)
 
     # AI service metadata
-    ai_service = Column(String(50), nullable=True)  # "openrouter" or "gemini"
-    model_used = Column(String(100), nullable=True)  # e.g., "meta-llama/llama-3.1-70b-instruct"
+    ai_service = Column(String(50), nullable=True)  # "gemini"
+    model_used = Column(String(100), nullable=True)  # e.g., "gemini-flash-latest"
 
     # Timestamp
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

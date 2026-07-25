@@ -42,14 +42,18 @@ async def analyze_job_description(
 ):
     result = await db.execute(
         select(Portfolio)
-        .where(Portfolio.user_id == current_user.id, Portfolio.resume_text.is_not(None))
+        .where(
+            Portfolio.user_id == current_user.id,
+            Portfolio.status == "completed",
+            Portfolio.resume_text.is_not(None),
+        )
         .order_by(Portfolio.created_at.desc())
         .limit(1)
     )
     portfolio = result.scalars().first()
     resume_text = (portfolio.resume_text or "").strip() if portfolio else ""
     if not resume_text:
-        raise HTTPException(status_code=400, detail="Add a resume to a portfolio before checking JD readiness.")
+        raise HTTPException(status_code=403, detail="Create a completed portfolio with a resume before checking JD readiness.")
     try:
         return await analyse_jd(resume_text, request.job_description.strip())
     except SuspiciousJobDescriptionError as error:

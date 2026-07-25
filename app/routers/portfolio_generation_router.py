@@ -7,6 +7,7 @@ from typing import Optional
 from datetime import datetime
 
 from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, Request
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -55,6 +56,18 @@ async def generate_portfolio(
         payload = verify_token(token)
         if payload:
             user_id = payload.get("sub")
+
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Sign in with GitHub before creating a portfolio")
+
+    existing_portfolio = await db.execute(
+        select(Portfolio.id).where(Portfolio.user_id == user_id).limit(1)
+    )
+    if existing_portfolio.scalar_one_or_none():
+        raise HTTPException(
+            status_code=409,
+            detail="Each account can have one portfolio. Update or delete your existing portfolio before creating another.",
+        )
 
     """
     Generate a complete portfolio from multiple data sources.
@@ -240,6 +253,16 @@ async def generate_portfolio(
         portfolio.generation_completed_at = datetime.utcnow()
 
         await db.commit()
+
+        # Build the initial Career Coach knowledge index from the exact portfolio
+        # sources the user selected. Indexing failure must not discard a valid portfolio.
+        try:
+            from app.services.rag_service import index_portfolio_knowledge
+
+            indexed_chunks = await index_portfolio_knowledge(user_id, portfolio)
+            logger.info("Career Coach RAG index completed with %s chunks", indexed_chunks)
+        except Exception as error:
+            logger.warning("Career Coach RAG index failed after portfolio generation: %s", error)
 
         # 11. Calculate generation time
         generation_time = time.time() - start_time

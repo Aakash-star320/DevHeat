@@ -73,6 +73,11 @@ const portfolioService = {
         return response.data;
     },
 
+    // Delete one portfolio and its derived RAG knowledge (conversations remain)
+    deletePortfolio: async (slug) => {
+        await api.delete(`/portfolio/${slug}`);
+    },
+
     // Upload LinkedIn Profile
     uploadLinkedIn: async (file) => {
         const formData = new FormData();

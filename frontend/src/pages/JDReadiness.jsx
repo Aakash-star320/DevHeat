@@ -8,8 +8,8 @@ import Navbar from '../components/navbar';
 import Footer from '../components/footer';
 import LenisScroll from '../components/lenis-scroll';
 import { useAuth } from '../hooks/useAuth';
-import authService from '../services/authService';
 import jdMatchService from '../services/jdMatchService';
+import portfolioService from '../services/portfolioService';
 import './JDReadiness.css';
 
 const SECTION_META = {
@@ -66,13 +66,25 @@ export default function JDReadiness() {
     const [report, setReport] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [hasPortfolio, setHasPortfolio] = useState(null);
 
     useEffect(() => {
-        if (!authLoading && !user) {
-            sessionStorage.setItem('redirectAfterLogin', '/jd-readiness');
-            authService.login();
-        }
-    }, [authLoading, user]);
+        if (!user) return;
+        let active = true;
+        portfolioService.getMyPortfolios()
+            .then((portfolios) => {
+                if (!active) return;
+                if (portfolios.some((portfolio) => portfolio.status === 'completed')) {
+                    setHasPortfolio(true);
+                } else {
+                    setHasPortfolio(false);
+                }
+            })
+            .catch(() => {
+                if (active) setHasPortfolio(false);
+            });
+        return () => { active = false; };
+    }, [user]);
 
     const sectionEntries = useMemo(() => (
         report ? Object.entries(SECTION_META).filter(([key]) => Number.isFinite(report.section_scores[key])) : []
@@ -93,7 +105,7 @@ export default function JDReadiness() {
         }
     };
 
-    if (authLoading || !user) return null;
+    if (authLoading) return null;
 
     return (
         <>
@@ -109,15 +121,44 @@ export default function JDReadiness() {
                         <div className="jd-hero-glow jd-hero-glow-two" />
                         <div className="jd-kicker"><Radar size={14} /> RESUME-BASED READINESS</div>
                         <h1>See how your profile<br /><span>aligns with the role.</span></h1>
-                        <p>Your report compares this role only with your stored resume—no vague AI score, no GitHub assumptions.</p>
+                        <p>Get a clear, resume-based view of how your experience aligns with the role.</p>
                         <div className="jd-trust-row">
-                            <span><ShieldCheck size={15} /> Resume only</span>
-                            <span><Target size={15} /> Deterministic scoring</span>
-                            <span><Sparkles size={15} /> Gemini analysis</span>
+                            <span><ShieldCheck size={15} /> Resume-based</span>
+                            <span><Target size={15} /> Role-focused</span>
+                            <span><Sparkles size={15} /> Practical insights</span>
                         </div>
                     </motion.section>
 
-                    {!report ? (
+                    {!user ? (
+                        <motion.section
+                            className="jd-input-shell"
+                            initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
+                        >
+                            <div className="jd-input-heading">
+                                <div className="jd-input-icon"><FileText size={21} /></div>
+                                <div><span>SIGN IN REQUIRED</span><h2>Sign in to continue</h2></div>
+                            </div>
+                            <p className="jd-empty-note">Please sign in with GitHub first, then create your portfolio to check your readiness for a role.</p>
+                        </motion.section>
+                    ) : hasPortfolio === null ? (
+                        <motion.section
+                            className="jd-input-shell"
+                            initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
+                        >
+                            <p className="jd-empty-note">Checking your portfolio access…</p>
+                        </motion.section>
+                    ) : !hasPortfolio ? (
+                        <motion.section
+                            className="jd-input-shell"
+                            initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
+                        >
+                            <div className="jd-input-heading">
+                                <div className="jd-input-icon"><FileText size={21} /></div>
+                                <div><span>PORTFOLIO REQUIRED</span><h2>Create your portfolio first</h2></div>
+                            </div>
+                            <p className="jd-empty-note">JD Readiness compares a job description with your stored resume. Create a completed portfolio with your resume before using this feature.</p>
+                        </motion.section>
+                    ) : !report ? (
                         <motion.section
                             className="jd-input-shell"
                             initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .1, duration: .45 }}

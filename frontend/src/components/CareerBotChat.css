@@ -4,6 +4,9 @@
     --coach-line: rgba(167, 187, 255, .13);
     --coach-panel: rgba(11, 16, 32, .82);
     display: flex;
+    position: relative;
+    width: 100%;
+    min-width: 0;
     min-height: 670px;
     overflow: hidden;
     border: 1px solid rgba(141, 165, 255, .18);
@@ -106,4 +109,38 @@
 .coach-composer button { display: grid; width: 38px; height: 38px; flex: 0 0 38px; place-items: center; border: 0; border-radius: 12px; color: #fff; background: linear-gradient(140deg, #7757ef, #c053d5); cursor: pointer; box-shadow: 0 7px 17px rgba(122, 77, 226, .33); transition: .2s ease; }.coach-composer button:hover:not(:disabled) { transform: translateY(-2px); }.coach-composer button:disabled { cursor: not-allowed; opacity: .45; box-shadow: none; }
 .coach-composer-note { margin: 9px 0 19px; color: #65718a; font-size: .64rem; text-align: center; }
 
-@media (max-width: 760px) { .coach-workspace { min-height: 690px; border-radius: 18px; }.coach-workspace.is-fullscreen { border-radius: 0; }.coach-sidebar { position: absolute; z-index: 5; height: 100%; box-shadow: 18px 0 40px rgba(0,0,0,.4); }.coach-sidebar.is-open { width: min(82vw, 284px); flex-basis: min(82vw, 284px); }.coach-main-header { min-height: 91px; padding: 18px 20px; }.coach-context-chip { display: none; }.coach-message-area { padding: 23px 16px; }.starter-grid { grid-template-columns: 1fr; }.coach-welcome { margin-top: 5px; }.coach-welcome h3 { font-size: 1.9rem; }.message-body { max-width: calc(100% - 43px); }.coach-composer { margin: 0 14px; }.coach-error { margin: 0 14px 10px; }.coach-composer-note { margin-bottom: 15px; } }
+@media (max-width: 1024px) {
+    .coach-workspace { min-height: min(690px, calc(100dvh - 170px)); }
+    .coach-sidebar { position: absolute; z-index: 8; top: 0; bottom: 0; left: 0; width: min(84vw, 310px); flex-basis: min(84vw, 310px); box-shadow: 18px 0 40px rgba(0,0,0,.45); transform: translateX(-105%); opacity: 0; visibility: hidden; transition: transform .25s ease, opacity .2s ease, visibility .2s ease; }
+    .coach-sidebar.is-open { transform: translateX(0); opacity: 1; visibility: visible; }
+    .coach-sidebar.is-collapsed { width: min(84vw, 310px); flex-basis: min(84vw, 310px); overflow: visible; }
+    .coach-main-header { min-height: 92px; padding: 18px 24px 18px 68px; }
+    .coach-main-header h2 { max-width: min(60vw, 520px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sidebar-expand { top: 28px; left: 20px; }
+    .coach-message-area { padding: 26px clamp(18px, 4vw, 42px); }
+    .starter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .coach-composer { margin: 0 clamp(18px, 4vw, 34px); }
+    .coach-error { margin: 0 clamp(18px, 4vw, 34px) 10px; }
+}
+
+@media (max-width: 760px) {
+    .coach-workspace { min-height: calc(100dvh - 145px); border-radius: 18px; }
+    .coach-workspace.is-fullscreen { border-radius: 0; }
+    .coach-main-header { min-height: 82px; padding: 15px 16px 15px 58px; }
+    .coach-main-header h2 { max-width: 58vw; font-size: 1.06rem; }
+    .sidebar-expand { top: 23px; left: 14px; }
+    .coach-message-area { padding: 20px 14px; }
+    .coach-welcome { margin-top: 3px; }
+    .coach-welcome-orb { width: 54px; height: 54px; margin-bottom: 16px; border-radius: 18px; }
+    .coach-welcome h3 { font-size: 1.72rem; }
+    .coach-welcome p { font-size: .84rem; }
+    .starter-grid { grid-template-columns: 1fr; gap: 8px; margin-top: 24px; }
+    .starter-grid button { min-height: 64px; }
+    .message-body { max-width: calc(100% - 43px); }
+    .message-bubble { padding: 12px 13px; font-size: .84rem; }
+    .coach-composer { gap: 8px; margin: 0 12px; padding-left: 13px; border-radius: 16px; }
+    .coach-composer textarea { font-size: .84rem; }
+    .coach-error { margin: 0 12px 9px; }
+    .coach-composer-note { margin: 8px 12px 13px; font-size: .59rem; }
+    .quick-fullscreen-button { right: 15px; bottom: 15px; padding: 9px 11px; }
+}

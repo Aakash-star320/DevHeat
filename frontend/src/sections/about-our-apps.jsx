@@ -30,7 +30,7 @@ export default function AboutOurApps() {
     ];
     return (
         <section className="flex flex-col items-center" id="about">
-            <SectionTitle title="Why SmartFolio?" description="Create a stunning, professional portfolio in minutes with our AI-powered platform." />
+            <SectionTitle title="Why CareerFolio?" description="Create a stunning portfolio, understand your role readiness, and get personalized career guidance." />
             <div className="relative max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 px-8 md:px-0 mt-18">
                 {sectionData.map((data, index) => (
                     <motion.div key={data.title} className={data.className}

@@ -1,6 +1,6 @@
-# SmartFolio Frontend
+# CareerFolio Frontend
 
-React-based frontend for SmartFolio - AI-Powered Portfolio Generator.
+React-based frontend for CareerFolio - Portfolio, Readiness & Career Guidance.
 
 ## Tech Stack
 
@@ -150,8 +150,8 @@ See the [main README](../README.md) in the project root.
 
 ## License
 
-Built for hackathon use. Part of the SmartFolio project.
+Built for hackathon use. Part of the CareerFolio project.
 
 ---
 
-**Part of SmartFolio** - AI-Powered Portfolio Generator
+**Part of CareerFolio** - Portfolio, Readiness & Career Guidance

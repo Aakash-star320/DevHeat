@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ExternalLink, Edit, Clock, Plus, Briefcase } from 'lucide-react';
+import { ExternalLink, Edit, Clock, Plus, Briefcase, Trash2 } from 'lucide-react';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
 import LenisScroll from '../components/lenis-scroll';
@@ -14,6 +14,7 @@ export default function MyPortfolios() {
     const [portfolios, setPortfolios] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [deletingId, setDeletingId] = useState(null);
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -40,6 +41,25 @@ export default function MyPortfolios() {
         }
     };
 
+    const handleDelete = async (portfolio) => {
+        const confirmed = window.confirm(
+            `Delete ${portfolio.name}? This permanently removes this portfolio and its saved content. Your Career Coach conversations will remain.`
+        );
+        if (!confirmed) return;
+
+        try {
+            setDeletingId(portfolio.id);
+            setError(null);
+            await portfolioService.deletePortfolio(portfolio.slug);
+            setPortfolios((current) => current.filter((item) => item.id !== portfolio.id));
+        } catch (err) {
+            console.error('Failed to delete portfolio:', err);
+            setError(err.response?.data?.detail || 'Failed to delete this portfolio');
+        } finally {
+            setDeletingId(null);
+        }
+    };
+
     if (authLoading || (loading && portfolios.length === 0)) {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -63,13 +83,15 @@ export default function MyPortfolios() {
                             <h1 className="text-4xl font-bold text-white mb-2">My Portfolios</h1>
                             <p className="text-slate-400">Manage and refine your generated professional portfolios</p>
                         </div>
-                        <Link
-                            to="/generate"
-                            className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition active:scale-95"
-                        >
-                            <Plus className="size-5" />
-                            Generate New
-                        </Link>
+                        {portfolios.length === 0 && (
+                            <Link
+                                to="/generate"
+                                className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition active:scale-95"
+                            >
+                                <Plus className="size-5" />
+                                Create Portfolio
+                            </Link>
+                        )}
                     </header>
 
                     {error && (
@@ -145,6 +167,16 @@ export default function MyPortfolios() {
                                         >
                                             <ExternalLink className="size-4" />
                                         </Link>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDelete(portfolio)}
+                                            disabled={deletingId === portfolio.id || portfolio.status === 'generating'}
+                                            className="px-3 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg transition disabled:cursor-not-allowed disabled:opacity-50"
+                                            aria-label={`Delete ${portfolio.name}`}
+                                            title="Delete portfolio"
+                                        >
+                                            <Trash2 className="size-4" />
+                                        </button>
                                     </div>
                                 </motion.div>
                             ))}

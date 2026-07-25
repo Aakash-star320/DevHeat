@@ -349,7 +349,7 @@ async def _ask_gemini(prompt: str) -> JDAnalysisResponse:
         contents=prompt,
         config=genai_types.GenerateContentConfig(
             temperature=0.0,
-            max_output_tokens=5000,
+            max_output_tokens=8192,
             response_mime_type="application/json",
             response_schema=JDAnalysisResponse,
         ),

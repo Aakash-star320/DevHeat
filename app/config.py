@@ -17,12 +17,10 @@ ALLOWED_MIME_TYPES = [
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./portfolio.db")
 
-# OpenRouter API Configuration (for AI Career Bot)
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
-OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.1-70b-instruct")
-OPENROUTER_SITE_URL = os.getenv("OPENROUTER_SITE_URL", "http://localhost:5173")
-OPENROUTER_APP_NAME = os.getenv("OPENROUTER_APP_NAME", "DevHeat Career Bot")
+# RAG configuration for the AI Career Coach
+QDRANT_URL = os.getenv("QDRANT_URL", "")
+QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "")
+QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME", "smartfolio_career_knowledge")
 
 # GitHub OAuth Configuration
 GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID", "")
